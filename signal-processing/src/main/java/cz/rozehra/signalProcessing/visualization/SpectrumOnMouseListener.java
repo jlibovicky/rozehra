@@ -1,12 +1,11 @@
-package cz.rozehra.signalProcessing
+package cz.rozehra.signalProcessing.visualization;
 
 /**
  * Created with IntelliJ IDEA.
  * User: Jindrich
- * Date: 11/11/12
- * Time: 9:38 PM
+ * Date: 11/23/12
+ * Time: 5:17 PM
  * To change this template use File | Settings | File Templates.
  */
-package object partialtracking {
-
+public class SpectrumOnMouseListener {
 }
