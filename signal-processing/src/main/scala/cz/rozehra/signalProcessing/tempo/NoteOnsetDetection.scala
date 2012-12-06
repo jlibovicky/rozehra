@@ -1,30 +1,52 @@
 package cz.rozehra.signalProcessing.tempo
 
-import cz.rozehra.signalProcessing.Spectrum
-import cz.rozehra.signalProcessing.Spectrogram
+import scala.math._
+import cz.rozehra.signalProcessing._
+import scalala.tensor.dense.DenseMatrix
+import scalala.library.Plotting
+import collection._
 
 object NoteOnsetDetection {
-    def sliceSpectrum[T <: Double](spectrum : Spectrum[T]): List[Spectrum[T]] = {
-      val spectrumLength = spectrum.amplitudes.length
-      
-      val zeros = IndexedSeq.fill[T](spectrumLength)(0.0.asInstanceOf[T])
-      def iterate(amplitudes: List[T], i: Int, accu: List[Spectrum[T]]): List[Spectrum[T]] =
-        amplitudes match {
-          case Nil => accu.reverse
-          case amp :: rest => 
-            iterate(rest, i + 1, 
-                    new Spectrum[T](spectrum.duration, spectrum.bandWidth, 
-                        IndexedSeq.fill[T](i)(0.0.asInstanceOf[T]) ++ IndexedSeq(amp) ++ 
-                        IndexedSeq.fill[T](spectrumLength - i -1)(0.0.asInstanceOf[T])) :: accu)
+  val timeCorrection = -0.03
+
+  private def getMaximaFromEnergyFlux(fluxSignal: TimeDomainWaveForm[EnergyFlux]): Seq[Time] = {
+    var indexes = List.empty[Int]
+
+    // go through the flux and find the indexes of local maxima
+    var tmpMaximumIndex = 0
+    var tmpMaximumValue = 0.0
+    var inPeakArea = false
+
+    for (i <- 0 until fluxSignal.samples.size) {
+      if (!inPeakArea && fluxSignal.samples(i) > 0.0) {
+        inPeakArea = true
+        tmpMaximumValue = fluxSignal.samples(i)
+        tmpMaximumIndex = i
       }
-      
-      iterate(spectrum.amplitudes.toList, 0, Nil)
+      else if (inPeakArea && fluxSignal.samples(i) == 0.0) {
+        indexes ::= tmpMaximumIndex
+        inPeakArea = false
+      }
+      else if (inPeakArea && fluxSignal.samples(i) > tmpMaximumValue) {
+        tmpMaximumValue = fluxSignal.samples(i)
+        tmpMaximumIndex = i
+      }
     }
-    
-    def sliceSpectrogram[T <: Double](spectrogram: Spectrogram[T]): List[Spectrogram[T]] = {
-      val slicedSpectra = spectrogram.spectra.map(s => sliceSpectrum[T](s))
-      val nils = List.fill[List[Spectrum[T]]](spectrogram.spectra.length)
-      
-      Nil
+
+    def indexesListToTimeSeq(list: List[Int], accu: List[Time]): Seq[Time] = {
+      list match {
+        case Nil => accu.toSeq
+        case i :: is => indexesListToTimeSeq(is, (i / fluxSignal.samplingRate) :: accu)
+      }
     }
+
+    indexesListToTimeSeq(indexes, Nil)
+  }
+
+  def computeNoteOnsetTimes(energyFlux: TimeDomainWaveForm[EnergyFlux]): Seq[Time] = {
+    val times = getMaximaFromEnergyFlux(energyFlux)
+
+    // the smoothing leads to shift to the right => shift to the left by five constant
+    times.map(e => e + timeCorrection )
+  }
 }

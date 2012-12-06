@@ -1,22 +1,29 @@
 package cz.rozehra.signalProcessing.fft
 
 import scala.math._
+import cz.rozehra.signalProcessing.Window
+import collection.{mutable, immutable}
 
 object FFT {
-  def transformReal(input:IndexedSeq[Double]) = {
-    val data = padder(input.map(i => Complex(i)).toList)
-    val outComplex = fft(data)
-    outComplex.map(c => math.sqrt((c.re * c.re) + (c.im * c.im))).take((data.length / 2) + 1).toIndexedSeq // Magnitude Output
-  }
-
-  def powerSpectrum(input:IndexedSeq[Double]) = {
+  def powerSpectrum[T <: Double](input:IndexedSeq[T]) = {
     val data = padder(input.map(i => Complex(i)).toList)
     val outComplex = fft(data)
     val out = outComplex.map(c => math.sqrt((c.re * c.re) + (c.im * c.im))).take((data.length / 2) + 1).toIndexedSeq
-    out.map(i => (i * i) / data.length) // Power Spectral Density Output
+    out.map(i => (i / sqrt(data.length)).asInstanceOf[T]) // Power Spectral Density Output
   }
 
-  def padder(data:List[Complex]) : List[Complex] = {
+  def hammingWindow[T <: Double](original: Window[T]): immutable.IndexedSeq[T] = {
+    val N = original.size
+    val newWindowVector: mutable.IndexedSeq[T] = mutable.IndexedSeq.fill(N)(0.0.asInstanceOf[T])
+
+    for (i <- 0 until original.size) {
+      newWindowVector(i) = (0.5 * (1.0 - math.cos(2.0 * math.Pi * i / (N - 1.0))) * original.samples(i)).asInstanceOf[T]
+    }
+
+    newWindowVector.toIndexedSeq[T]
+  }
+
+  private def padder(data:List[Complex]) : List[Complex] = {
     def check(num:Int) : Boolean = if((num.&(num-1)) == 0) true else false
     def pad(i:Int) : Int = {
       check(i) match {
@@ -28,6 +35,7 @@ object FFT {
   } 
 
   def fft(f: List[Complex]) : List[Complex] = {
+    require(isPowerOf2(f.size), "Input of FFT must have size of power of two.")
     f.size match {
       case 0 => Nil
       case 1 => f
@@ -45,5 +53,9 @@ object FFT {
       }
     }
   }
-}
 
+  private def isPowerOf2(n: Int): Boolean =
+   if (n == 2 || n == 1) true
+   else if (n % 2 == 1) false
+        else isPowerOf2(n / 2)
+}

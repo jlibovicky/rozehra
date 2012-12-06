@@ -6,16 +6,21 @@ import scalala.library.Plotting
 
 class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Spectrum[T]], 
     val signalWindowSize: Int, val signalWindowShift: Int) {
-  
-  def generateSignal: TimeDomainWaveForm[T] = {
+
+  val bandWidth = spectra.head.bandWidth
+  val bandsCount = spectra.head.amplitudes.size
+  val spectrumDuration = spectra.head.duration
+  val maxFrequency = spectra.head.maxFrequency
+
+/*  def generateSignal: TimeDomainWaveForm[T] = {
     val samplingRate = 2 * spectra.head.maxFrequency
     val listOfWindows = spectra.map(spectrum => spectrum.generateWindow.samples)
-    val wholeSignal = listOfWindows.foldRight(List[T]())((windowContent, signalStub) => windowContent.toList ++ signalStub)
+    val wholeSignal = listOfWindows.foldRight(IndexedSeq[T]())((windowContent, signalStub) => windowContent ++ signalStub)
     new TimeDomainWaveForm(samplingRate, wholeSignal)
-  }  
+  }*/
   
   def plot: Unit = {
-    val matrix: DenseMatrix[Double] = DenseMatrix.zeros[Double](spectra.size, spectra.head.amplitudes.size) 
+    val matrix: DenseMatrix[Double] = DenseMatrix.zeros[Double](spectra.head.amplitudes.size, spectra.size)
            
       
     def createMatrix(colNum: Int, spectra: List[Spectrum[T]]): Unit = {
@@ -23,7 +28,7 @@ class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Sp
         case Nil => Unit
         case head :: tail => {
           for (i <- 0 until head.amplitudes.size) {
-            matrix(colNum, i) = head.amplitudes(i)
+            matrix(head.amplitudes.length - i - 1, colNum) = head.amplitudes(i)
           }
         createMatrix(colNum + 1, tail)
         }

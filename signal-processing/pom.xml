@@ -17,20 +17,59 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
+            <groupId>jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.0.13</version>
         </dependency>
+
+        <dependency>
+        	<groupId>junit</groupId>
+        	<artifactId>junit</artifactId>
+        	<version>4.10</version>
+        </dependency>
+        
+        <dependency> 
+            <groupId>org.scala-lang</groupId> 
+            <artifactId>scala-library</artifactId> 
+            <version>${scala.compiler.version}</version> 
+            <type>jar</type> 
+            <scope>compile</scope> 
+        </dependency> 
+        
+        <dependency>
+	       <groupId>org.scalala</groupId>
+	       <artifactId>scalala_2.9.1</artifactId>
+	       <version>1.0.0.RC2</version>
+        </dependency>
+        
+        <dependency>
+	       <groupId>org.scalatest</groupId>
+	       <artifactId>scalatest_2.9.0</artifactId>
+	       <version>1.6.1</version>
+        </dependency>
+                   
     </dependencies>
 
 
 	<repositories>
-    	<repository>
+    	<!-- <repository>
       		<id>scala-tools.org</id>
       		<name>Scala-tools Maven2 Repository</name>
       		<url>http://scala-tools.org/repo-releases</url>
-    	</repository>
+    	</repository> -->
+        
+        <repository>
+            <id>scala-tools.org</id>
+            <name>Scala-Tools Maven2 Repository</name>
+            <url>http://scala-tools.org/repo-snapshots</url>
+        </repository>
+
+        <repository>
+            <id>scalanlp.org</id>
+            <name>ScalaNLP Maven2 Repository</name>
+            <url>http://repo.scalanlp.org/repo</url>
+        </repository>
+        
 	</repositories>
 
     <pluginRepositories>
@@ -51,7 +90,7 @@
                 <artifactId>maven-scala-plugin</artifactId>
                 <version>${maven.scala.plugin.version}</version>
                                 
-                <executions>
+               <executions>
                     <execution>
                         <id>scala-compile-first</id>
                         <phase>process-resources</phase>
@@ -60,42 +99,72 @@
                             <goal>compile</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+            
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/main/scala</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-test-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/test/scala</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.2.2</version>
+                <executions>
+                    <execution>
+                        <id>appassemble</id>
+                        <goals>
+                            <goal>assemble</goal>
+                            <!--<goal>generate-daemons</goal> -->
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <programs>
+                        <program>
+                            <mainClass>cz.rozehra.signalProcessing.tempo.TempoEstimation</mainClass>
+                            <name>TempoEstimation</name>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
         </plugins>
-        
-        <pluginManagement>
-            <plugins>
-                <!--This plugin's configuration is used to store Eclipse 
-                    m2e settings only. It has no influence on the Maven build itself. -->
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <version>1.0.0</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.scala-tools</groupId>
-                                        <artifactId>maven-scala-plugin</artifactId>
-                                        <versionRange>[1.0,)</versionRange>
-                                        <goals>
-                                            <goal>add-source</goal>
-                                            <goal>test-compile</goal>
-                                            <goal>compile</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <execute />
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
-                    </configuration>
-                </plugin>
-            </plugins>
-    </pluginManagement>
     </build>
     
     

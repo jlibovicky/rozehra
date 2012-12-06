@@ -1,90 +1,100 @@
 package cz.rozehra.signalProcessing.visualization;
 
 import cz.rozehra.signalProcessing.Spectrogram;
+import cz.rozehra.signalProcessing.partialtracking.Track;
+import cz.rozehra.signalProcessing.tempo.Tempo;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
 public class Visualizer extends JFrame {
+    public static final int horizontalShift = 0;
+    public static final int horizontalScale = 2;
+
     private JFrame window;
+    private JPanel mainPanel;
+    private JScrollPane scrollPane;
+    private SpectrogramDrawer drawer;
+    private FrequencyScaleDrawer frequencyScale;
+    private JLabel timeLabel;
+    private JLabel freqLabel;
+
+    private Spectrogram<?> spectrogram;
 
     public Visualizer() {
         window = new JFrame();
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setBounds(30, 30, 300, 300);
+        window.setBounds(30, 30, 1050, 600);
+
+
+        mainPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+
+        frequencyScale = new FrequencyScaleDrawer();
+        mainPanel.add(frequencyScale);
+
+        drawer = new SpectrogramDrawer();
+        scrollPane = new JScrollPane(drawer);
+        scrollPane.setPreferredSize(new Dimension(800, 565));
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.setLocation(40, 0);
+        mainPanel.add(scrollPane);
+
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(null);
+        rightPanel.setPreferredSize(new Dimension(150, 567));
+        mainPanel.add(rightPanel);
+
+        JLabel timeTitle = new JLabel();
+        timeTitle.setBounds(10, 400, 100, 20);
+        timeTitle.setText("time");
+        rightPanel.add(timeTitle);
+
+        timeLabel = new JLabel();
+        timeLabel.setBounds(25, 420, 140, 20);
+        timeLabel.setText("??? s");
+        timeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        timeLabel.setFont(timeLabel.getFont().deriveFont(18.0f));
+        rightPanel.add(timeLabel);
+
+        JLabel freqTitle = new JLabel();
+        freqTitle.setBounds(10, 450, 10, 20);
+        freqTitle.setText("frequency");
+        rightPanel.add(freqTitle);
+
+        freqLabel = new JLabel();
+        freqLabel.setBounds(25, 470, 140, 20);
+        freqLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        freqLabel.setText("??? Hz");
+        freqLabel.setFont(freqLabel.getFont().deriveFont(18.0f));
+        rightPanel.add(freqLabel);
+
+        window.getContentPane().add(mainPanel);
         window.setVisible(true);
     }
 
     public void drawSpectrum(Spectrogram<?> spectrogram) {
-        window.getContentPane().add(new SpectrogramDrawer(spectrogram));
-
-
-        // plot the frequency scale
-        /*int thousandsOfHertzs = (int)(Math.floor(spectrogram.maxFrequency() / 1000));
-        double hundredHertzHeight = 100 * spectrogram.bandsCount() / spectrogram.maxFrequency();
-        for (int i = 0; i <= thousandsOfHertzs; i++) {
-            int verticalPos = (int)(hundredHertzHeight * i);
-
-            JLabel label = new JLabel();
-            label.setText((i * 1000) + "Hz");
-            label.setBounds(0, verticalPos - 5, SpectrogramDrawer.horizontalShift - 10, verticalPos + 5) ;
-            window.getContentPane().add(label);
-        } */
-
-    }
-}
-
-class SpectrogramDrawer extends JComponent {
-    private Spectrogram spectrogram;
-
-    public static final int horizontalShift = 20;
-    public static final int horizontalScale = 2;
-
-    public SpectrogramDrawer(Spectrogram spectrogram) {
-        this.spectrogram = spectrogram;
+        drawer.addSpectrogram(spectrogram);
+        frequencyScale.addSpectrogram(spectrogram);
+        frequencyScale.setPreferredSize(new Dimension(
+                (int)frequencyScale.getPreferredSize().getWidth(),
+                (int)scrollPane.getPreferredSize().getHeight()));
+        drawer.addMouseMotionListener(
+                new SpectrumOnMouseListener(freqLabel, timeLabel,
+                        spectrogram.bandWidth(), spectrogram.spectrumRate(), spectrogram.bandsCount()));
+        drawer.addMouseListener(
+                new SpectrumOnClickListener(spectrogram));
     }
 
+    public void drawNoteOnsets(List<Double> noteOnsets) {
+        drawer.addOnsetTimes(noteOnsets);
+    }
 
-    public void paint(Graphics g) {
-        int spectumCount = 0;
-        List<Spectrum> spectra = scala.collection.JavaConversions.asJavaList(spectrogram.spectra().toSeq());
+    public void drawTempo(Tempo tempo) {
+        drawer.addTempo(tempo);
+    }
 
-        double maximum = 0.0;
-        for (Spectrum s: spectra) {
-            for(int i = 0; i < s.amplitudes().size(); i++) {
-                if ((Double)(s.amplitudes().apply(i)) > maximum) maximum = (Double)(s.amplitudes().apply(i));
-            }
-        }
-
-        for (Spectrum s: spectra) {
-            spectumCount++;
-            for(int i = 0; i < s.amplitudes().size(); i++) {
-                int colorIntensity = (int)Math.round(255.0 - (255.0 * (Double)(s.amplitudes().apply(i)) / maximum));
-
-                g.setColor(new Color(colorIntensity, colorIntensity, colorIntensity));
-                g.fillRect(horizontalShift + horizontalScale * spectumCount, s.amplitudes().size() - i, 2, 1);
-            }
-        }
-
-        // plot the time scale
-        g.setColor(Color.BLACK);
-        int tenthOfSecondsCount = (int)Math.floor(10 * spectumCount / spectrogram.spectrumRate());
-        for (int i = 0; i <= tenthOfSecondsCount; i++) {
-            int horizontalPos = horizontalShift + i * horizontalScale * (int)(spectrogram.spectrumRate()) / 10;
-            if (i % 10 == 0 ) {
-                g.drawLine(horizontalPos, spectrogram.bandsCount(),
-                        horizontalPos, spectrogram.bandsCount() + 10);
-                g.drawString((i / 10) + "s", horizontalPos - 4, spectrogram.bandsCount() + 12);
-            }
-            else if (i % 5 == 0) {
-                g.drawLine(horizontalPos, spectrogram.bandsCount(),
-                        horizontalPos, spectrogram.bandsCount() + 6);
-            }
-            else {
-                g.drawLine(horizontalPos, spectrogram.bandsCount(),
-                        horizontalPos, spectrogram.bandsCount() + 4);
-            }
-        }
+    public void drawPartialTracks(List<Track> partialTracks) {
+        drawer.addPartialTracks(partialTracks);
     }
 }
