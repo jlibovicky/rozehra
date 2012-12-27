@@ -2,10 +2,9 @@ package cz.rozehra.signalProcessing
 
 import org.scalatest.FunSuite
 import java.io.InputStream
-import scalala.library.Plotting
-import scalala.tensor.dense.DenseMatrix
-import java.awt.Color
-import scalala.library.plotting.GradientPaintScale
+import salienceFunction.{FundamentalDetection, Whitening}
+import visualization.Visualizer
+import collection.JavaConversions
 
 
 class PartialTrackingTest extends FunSuite {
@@ -31,20 +30,40 @@ class PartialTrackingTest extends FunSuite {
     readLine()
   }   */
 
-  /*test("test spectrum peak detection") {
+  test("signal whitening") {
     val resource: InputStream = getClass().getClassLoader().getResourceAsStream("dMajorScaleRecorder.wav");
-    val wave = new WaveFileReader(resource);
+
+    val readFileStart = System.currentTimeMillis
+    //val wave = new WaveFileReader(resource);
+    val wave = new WaveFileReader("C:\\MFF\\rozehra\\tempo_train_data\\train1.wav")
+    val readFileEnd = System.currentTimeMillis
+    println("Reading file: " + (readFileEnd - readFileStart) / 1000.0 + " s")
+
     val spectrogram = wave.segmentToWindows(1024, 512).toSpectrogram
+    val spectrogramComputed = System.currentTimeMillis
+    println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
     //spectrogram.plot
 
-    val visualzer = new Visualizer()
-    visualzer.drawSpectrum(spectrogram)
+    val whitenedSpectrogram = Whitening.whitenSpectrogram(spectrogram)
+    val signalWhitened = System.currentTimeMillis
+    println("Signal whitening: " + (signalWhitened - spectrogramComputed) / 1000.0 + " s")
+    //whitenedSpectrogram.spectra(157).amplitudes.foreach(println)
 
-    val tracks = PartialTracking.partialTracking(spectrogram.spectra)
-    tracks.foreach( t => println(t) )
+    val visualizer2 = new Visualizer()
+    visualizer2.drawSpectrum(whitenedSpectrogram)
 
+    val fundamentalsStart = System.currentTimeMillis
+    val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram)
+    val fundamentalsEnd = System.currentTimeMillis
+    println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
 
-    visualzer.drawPartialTracks(scala.collection.JavaConversions.asJavaList(tracks.toSeq))
+    val tracks = PartialTracking.partialTracking(detectedFundamentals)
+    val trackingEnd = System.currentTimeMillis
+    println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
+    //tracks.foreach( t => println(t) )
+
+    visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))))
+    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq))
     readLine()
-  }*/
+  }
 }

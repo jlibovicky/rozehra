@@ -5,8 +5,9 @@ import scala.math._
 
 object TempoEstimation {
   val windowSize = 4096
-  val windowShift = 512
-  val tempoUpperBound = 5.0
+  val windowShift = 1024
+  val tempoLowerBound = 0.3 // Hz
+  val tempoUpperBound = 4.0 // Hz
 
   val minimumRelativeTrackLength = 0.9
 
@@ -15,12 +16,22 @@ object TempoEstimation {
   }
 
   def tempoEstimation(energyFlux: TimeDomainWaveForm[EnergyFlux]): Double = {
-    val spectrogram = modifyFluxSpectrogram(fluxSpectrogram(energyFlux))
+    //val filteredFlux = Filters.bandPassFilter(energyFlux.samples, energyFlux.samplingRate, tempoLowerBound, tempoUpperBound)
 
-    val tempoTracks = TempoPartialTracking.partialTracking(spectrogram.spectra)
+    maxFrequencyByAutoCorrelation(energyFlux)
+
+    /*val spectrogram = modifyFluxSpectrogram(fluxSpectrogram(
+      new TimeDomainWaveForm[EnergyFlux](energyFlux.samplingRate, filteredFlux)))
+
+    val tempoTracks = TempoPartialTracking.partialTracking(spectrogram.spectra.map(_.findPeaks.toSeq))
     val sortedTracks = tempoTracks.toSeq.sortWith( (t1, t2) => t1.averageAmplitude < t2.averageAmplitude )
 
-    sortedTracks(0).averageFrequency
+    if (sortedTracks.size > 0) sortedTracks(0).averageFrequency
+    else {
+      val maxima = spectrogram.spectra.par.map(a => a.amplitudes.zipWithIndex.maxBy(_._1)._2 *
+        spectrogram.bandWidth + spectrogram.bandWidth / 2)
+      maxima.toIndexedSeq.sorted.apply(maxima.size / 2)
+    } */
   }
 
   /**
@@ -56,6 +67,20 @@ object TempoEstimation {
 
     new Spectrogram[EnergyFlux](fluxSpectrogram.spectrumRate, newListOfSpectra,
       fluxSpectrogram.signalWindowSize, fluxSpectrogram.signalWindowShift)
+  }
+
+  private def maxFrequencyByAutoCorrelation(energyFlux: TimeDomainWaveForm[EnergyFlux]) = {
+    val minStep = (energyFlux.samplingRate / tempoUpperBound).asInstanceOf[Int]
+    val maxStep = (energyFlux.samplingRate / tempoLowerBound).asInstanceOf[Int]
+
+    val bestStep = (minStep to maxStep).map(getAutoCorrelation(_, energyFlux.samples)).zipWithIndex.
+      maxBy(_._1)._2 + minStep
+    energyFlux.samplingRate / bestStep
+  }
+
+  private def getAutoCorrelation(step: Int, samples: IndexedSeq[EnergyFlux]) = {
+    (for (i <- 0 until samples.size - step) yield samples(i) * samples(i + step)).
+      foldLeft(0.0)( (sum, e) => sum + e) / (samples.size - step)
   }
 
   def main(args: Array[String]) = {

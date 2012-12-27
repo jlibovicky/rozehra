@@ -2,8 +2,6 @@ package cz.rozehra.signalProcessing.tempo
 
 import scala.math._
 import cz.rozehra.signalProcessing._
-import scalala.tensor.dense.DenseMatrix
-import scalala.library.Plotting
 import collection._
 
 object NoteOnsetDetection {
@@ -43,10 +41,19 @@ object NoteOnsetDetection {
     indexesListToTimeSeq(indexes, Nil)
   }
 
+
+
   def computeNoteOnsetTimes(energyFlux: TimeDomainWaveForm[EnergyFlux]): Seq[Time] = {
+    val positiveOnly = energyFlux.samples.map( e => if (e > 0.0) e else 0.0)
+    val afterMedianFilter = Filters.medianFilter(positiveOnly, 501)
+    val afterSmoothing = Filters.triangularSmoothIterative(afterMedianFilter, 1200)
+    val finalMedianFilter = Filters.medianFilter(afterSmoothing, 501)
+
+    getMaximaFromEnergyFlux(new TimeDomainWaveForm[EnergyFlux](energyFlux.samplingRate, finalMedianFilter.toIndexedSeq))
     val times = getMaximaFromEnergyFlux(energyFlux)
 
     // the smoothing leads to shift to the right => shift to the left by five constant
     times.map(e => e + timeCorrection )
   }
+
 }

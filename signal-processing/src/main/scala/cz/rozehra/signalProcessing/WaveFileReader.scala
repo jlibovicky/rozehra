@@ -3,9 +3,6 @@ package cz.rozehra.signalProcessing
 import java.io._
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
-import scalala.library.Plotting
-import scalala.tensor.dense.DenseVector
-import scalala.tensor.dense.DenseVectorRow
 
 class WaveFileReader(val input: InputStream) { 
   def this(path: String) = this(new FileInputStream(path))
@@ -128,14 +125,14 @@ class WaveFileReader(val input: InputStream) {
   }
   
   def plot: Unit = {
-    Plotting.plot(DenseVector.range(0, data.length) / samplingRate, new DenseVectorRow(data.toArray))
+    /*Plotting.plot(DenseVector.range(0, data.length) / samplingRate, new DenseVectorRow(data.toArray))
     Plotting.title("Wave file")
-    Plotting.xlabel("Time in seconds")
+    Plotting.xlabel("Time in seconds")*/
   }
   
   def plot(fileName: String): Unit = {
-    plot
-    Plotting.saveas(fileName)
+    /*plot
+    Plotting.saveas(fileName)*/
   }
 
   def toTimeDomainWaveForm = new TimeDomainWaveForm[Signal](samplingRate, data.toIndexedSeq)

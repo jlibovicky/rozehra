@@ -12,35 +12,6 @@ abstract trait GenericPartialTracking[T <: Double] {
   def minimumTrackDensity: Double
   def minimumTrackDuration: Int
 
-  def findPeaksInSpectrum(spectrum: Spectrum[T]): Set[(Frequency, Double)] = {
-
-    val median = (spectrum.amplitudes.sortWith( (e1, e2) => e1 < e2))(spectrum.amplitudes.size / 2)
-
-    // spectrum after filtering out values less than median
-    var peaks = Set.empty[(Frequency, Double)]
-    val s = spectrum.amplitudes.map( a => if (a > median * medianMultiply) a else 0.0)
-
-    var inNonZeroArea = false
-    var tmpMaxIndex = -1
-
-    for (i <- 0 until s.size - 1) {
-      if (s(i) > 0 && !inNonZeroArea) {
-        inNonZeroArea = true
-        tmpMaxIndex = i
-      }
-      else if (s(i) == 0.0 && inNonZeroArea) {
-        inNonZeroArea = false
-        peaks += ((tmpMaxIndex.asInstanceOf[Double] * spectrum.bandWidth, s(tmpMaxIndex)))
-        tmpMaxIndex = -1
-      }
-      else if (s(i) > 0 && inNonZeroArea) {
-        if (s(i) > s(tmpMaxIndex)) tmpMaxIndex = i
-      }
-    }
-
-    peaks
-  }
-
 
   protected def appendCondition(avgFreq: Double, peak: Double): Boolean = {
     12 * abs(log(avgFreq /peak) / log(2.0)) < toneTolerance
@@ -137,16 +108,15 @@ abstract trait GenericPartialTracking[T <: Double] {
 
   /**
    * Performs the actual partial tracking algorithm with parameters set in this object.
-   * @param spectra List of spectra to be processed
+   * @param peaksList List of selected spectral peaks
    * @return List of tracks
    */
-  def partialTracking(spectra: List[Spectrum[T]]): Set[Track] = {
-    def partialTracking0(spectra: List[Spectrum[T]], activeTracks: List[Track],
+  def partialTracking(peaksList: List[Seq[(Frequency, Double)]]): Set[Track] = {
+    def partialTracking0(peaksList: List[Seq[(Frequency, Double)]], activeTracks: List[Track],
                          archivedTracks: Set[Track], currentTime: Int): Set[Track] = {
-      spectra match {
+      peaksList match {
         case Nil => findValuableTrackAtTheEnd(activeTracks) ++ archivedTracks
-        case spectrum :: rest => {
-          val peaks = findPeaksInSpectrum(spectrum)
+        case peaks :: rest => {
           val updatedTracks = updateTrackByPeaks(activeTracks, peaks.toList, currentTime)
           val (newActive, toArchive) = filterOutFinishedTracks(updatedTracks, currentTime)
 
@@ -154,6 +124,6 @@ abstract trait GenericPartialTracking[T <: Double] {
         }
       }
     }
-    partialTracking0(spectra, Nil, Set.empty[Track], 0)
+    partialTracking0(peaksList, Nil, Set.empty[Track], 0)
   }
 }

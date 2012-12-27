@@ -6,7 +6,7 @@ import scala.math._
 
 
 object PartialTracking extends GenericPartialTracking[Signal] {
-  override val medianMultiply: Double = 500.0
+  override val medianMultiply: Double = 100.0
 
   override val toneTolerance: Double = 0.6
   override val maximumWithoutUpdate: Int = 3

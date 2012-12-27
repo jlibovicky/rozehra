@@ -2,9 +2,6 @@ package cz.rozehra.signalProcessing
 
 import scala.collection.immutable.IndexedSeq
 import scala.math._
-import scalala.tensor.dense.DenseVector
-import scalala.tensor.dense.DenseVectorRow
-import scalala.library.Plotting
 import fft.{FFT}
 
 class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val samples: IndexedSeq[T]) {
@@ -18,7 +15,8 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val s
         sumSequences[T](samples, that.samples)
         
     def toSpectrum: Spectrum[T] = {
-      val spectrum = FFT.powerSpectrum(FFT.hammingWindow(this))
+
+      val spectrum = FFT.powerSpectrum(FFT.hammingWindow(samples))
       val bandWidth: Frequency = samplingRate / 2 / spectrum.length 
       new Spectrum[T](withShift, bandWidth, spectrum.asInstanceOf[IndexedSeq[T]])
     }
@@ -30,14 +28,14 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val s
       
     
     def plot: Unit = {
-      Plotting.plot(DenseVector.range(0, size) / samplingRate, new DenseVectorRow(samples.toArray[Double]))
+      /*Plotting.plot(DenseVector.range(0, size) / samplingRate, new DenseVectorRow(samples.toArray[Double]))
       Plotting.title("A window of " + magnitute)
       Plotting.xlabel("Time in seconds")
-      Plotting.ylabel(magnitute)
+      Plotting.ylabel(magnitute)*/
     }
         
     def plot(fileName: String): Unit = {
-      plot
-      Plotting.saveas(fileName)
+      /*plot
+      Plotting.saveas(fileName)*/
     }
 }

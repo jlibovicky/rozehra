@@ -1,10 +1,6 @@
 package cz.rozehra.signalProcessing
 
-import scalala.tensor.dense.DenseVector
-import scalala.tensor.dense._
-import scalala.library.Plotting
-
-class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Spectrum[T]], 
+class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Spectrum[T]],
     val signalWindowSize: Int, val signalWindowShift: Int) {
 
   val bandWidth = spectra.head.bandWidth
@@ -20,7 +16,7 @@ class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Sp
   }*/
   
   def plot: Unit = {
-    val matrix: DenseMatrix[Double] = DenseMatrix.zeros[Double](spectra.head.amplitudes.size, spectra.size)
+    /*val matrix: DenseMatrix[Double] = DenseMatrix.zeros[Double](spectra.head.amplitudes.size, spectra.size)
            
       
     def createMatrix(colNum: Int, spectra: List[Spectrum[T]]): Unit = {
@@ -39,11 +35,11 @@ class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Sp
     //Plotting.plot(DenseVector.range(0, amplitudes.length) * bandWidth, amplitudes)
     Plotting.image(matrix)
     Plotting.title("Spectrogram")
-    Plotting.xlabel("Time in secods")
+    Plotting.xlabel("Time in secods") */
   }
     
   def plot(fileName: String): Unit = {
-    plot          
-    Plotting.saveas(fileName)
+    /*plot
+    Plotting.saveas(fileName)*/
   }
 }

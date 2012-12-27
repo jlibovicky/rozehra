@@ -11,7 +11,7 @@ package object signalProcessing {
     
     def sumSequences[T <: Double](seq1: IndexedSeq[T], seq2: IndexedSeq[T]): IndexedSeq[T] = {
           def sumSamples0(seq1: IndexedSeq[T], seq2: IndexedSeq[T], accu: List[T]): IndexedSeq[T] =
-            if (seq1.isEmpty) accu.reverse.toIndexedSeq[T]
+            if (seq1.isEmpty) accu.reverse.toIndexedSeq
             else {
               sumSamples0(seq1.tail, seq2.tail, (seq1.head + seq2.head).asInstanceOf[T] :: accu)
             }

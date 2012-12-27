@@ -18,7 +18,7 @@ object Filters {
         resultSignal(i) = (alpha * signal(i) + (1 - alpha) * resultSignal(i - 1)).asInstanceOf[T]
       }
 
-      resultSignal.toIndexedSeq[T]
+      resultSignal.toIndexedSeq
     }
   }
 
@@ -34,7 +34,7 @@ object Filters {
       resultSignal(i) = (alpha * (resultSignal(i - 1) + signal(i) - signal(i - 1))).asInstanceOf[T]
     }
 
-    resultSignal.toIndexedSeq[T]
+    resultSignal.toIndexedSeq
   }
 
   def bandPassFilter[T <: Double](signal: IndexedSeq[T], samplingRate: Frequency, from: Frequency, to: Frequency) =
@@ -49,7 +49,7 @@ object Filters {
       resultSignal(i) = (signal(i) - signal(i - 1)) / dt
     }
 
-    resultSignal.toIndexedSeq[Double]
+    resultSignal.toIndexedSeq
   }
 
   /**
@@ -71,7 +71,7 @@ object Filters {
     if (signal.size >= 3) resultSignal(1) = ((signal(signal.size - 3) + signal(signal.size - 2) + signal(signal.size - 1)) / 3.0).asInstanceOf[T]
     resultSignal(signal.size - 1) = signal(signal.size - 1)
 
-    resultSignal.toIndexedSeq[T]
+    resultSignal.toIndexedSeq
   }
 
   def triangularSmoothIterative[T <: Double](signal: IndexedSeq[T], iterations: Int): IndexedSeq[T] = {
@@ -98,6 +98,6 @@ object Filters {
     //resultSignal(signal.size - 2) = if (signal(1) > median(signal.slice((signal.size - 3), (signal.size))))
     //  signal(signal.size - 2) else 0.0.asInstanceOf[T]
 
-    resultSignal.toIndexedSeq[T]
+    resultSignal.toIndexedSeq
   }
 }

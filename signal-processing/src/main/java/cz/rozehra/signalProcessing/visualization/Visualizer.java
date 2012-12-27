@@ -3,6 +3,7 @@ package cz.rozehra.signalProcessing.visualization;
 import cz.rozehra.signalProcessing.Spectrogram;
 import cz.rozehra.signalProcessing.partialtracking.Track;
 import cz.rozehra.signalProcessing.tempo.Tempo;
+import scala.collection.Seq;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,19 +52,19 @@ public class Visualizer extends JFrame {
         rightPanel.add(timeTitle);
 
         timeLabel = new JLabel();
-        timeLabel.setBounds(25, 420, 140, 20);
+        timeLabel.setBounds(25, 420, 120, 20);
         timeLabel.setText("??? s");
         timeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         timeLabel.setFont(timeLabel.getFont().deriveFont(18.0f));
         rightPanel.add(timeLabel);
 
         JLabel freqTitle = new JLabel();
-        freqTitle.setBounds(10, 450, 10, 20);
+        freqTitle.setBounds(10, 450, 100, 20);
         freqTitle.setText("frequency");
         rightPanel.add(freqTitle);
 
         freqLabel = new JLabel();
-        freqLabel.setBounds(25, 470, 140, 20);
+        freqLabel.setBounds(25, 470, 120, 20);
         freqLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         freqLabel.setText("??? Hz");
         freqLabel.setFont(freqLabel.getFont().deriveFont(18.0f));
@@ -92,6 +93,10 @@ public class Visualizer extends JFrame {
 
     public void drawTempo(Tempo tempo) {
         drawer.addTempo(tempo);
+    }
+
+    public void drawFundamentals(List<Seq<Double>> fundamentals) {
+        drawer.addFundamentalsCandidates(fundamentals);
     }
 
     public void drawPartialTracks(List<Track> partialTracks) {

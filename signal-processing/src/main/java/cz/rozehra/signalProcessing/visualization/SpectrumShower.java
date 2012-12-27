@@ -6,7 +6,7 @@ import java.util.List;
 
 public class SpectrumShower extends XYVisualizer {
     public SpectrumShower(final SpectrogramDrawer drawer, String timeAsString, int timeIndex, double bandWidth, List<Double> values) {
-        super("Spectrum at " + timeAsString, bandWidth, "Frequency [Hz]", "Power", values);
+        super("Spectrum at " + timeAsString + " s", bandWidth, "Frequency [Hz]", "Power", values);
 
         // draw rectangle in original visualizer
         if (drawer != null) drawer.timeRectangle = timeIndex;

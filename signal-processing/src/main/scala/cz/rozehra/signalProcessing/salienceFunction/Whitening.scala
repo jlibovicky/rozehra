@@ -1,12 +1,11 @@
 package cz.rozehra.signalProcessing.salienceFunction
 
-/**
- * Created with IntelliJ IDEA.
- * User: Jindrich
- * Date: 12/20/12
- * Time: 3:40 PM
- * To change this template use File | Settings | File Templates.
- */
-object Whitening {
+import cz.rozehra.signalProcessing._
 
+object Whitening {
+  def whitenSpectrogram(spectrogram: Spectrogram[Signal]) = {
+    val newSpectra = spectrogram.spectra.par.map( spectrum => new SpectrumWhitener(spectrum).getWhitenedSpectrum ).toList
+    new Spectrogram[Signal](spectrogram.spectrumRate, newSpectra,
+      spectrogram.signalWindowSize, spectrogram.signalWindowShift)
+  }
 }

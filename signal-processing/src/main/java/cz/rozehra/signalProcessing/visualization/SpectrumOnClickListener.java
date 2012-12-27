@@ -1,7 +1,6 @@
 package cz.rozehra.signalProcessing.visualization;
 
-import cz.rozehra.signalProcessing.Spectrogram;
-import cz.rozehra.signalProcessing.Spectrum;
+import cz.rozehra.signalProcessing.*;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;

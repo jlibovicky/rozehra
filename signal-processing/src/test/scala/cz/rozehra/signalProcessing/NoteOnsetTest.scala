@@ -2,7 +2,9 @@ package cz.rozehra.signalProcessing
 
 import java.io.InputStream
 import org.scalatest.FunSuite
-import tempo.{EnergyFluxComputation, NoteOnsetDetection, Tempo}
+import tempo.{NoteOnsetDetection, Tempo}
+import visualization.Visualizer
+
 //import visualization.Visualizer
 
 
@@ -48,9 +50,10 @@ class NoteOnsetTest extends FunSuite {
     readLine()
   }  */
 
- /*test("compute the tempo") {
+ test("compute the tempo") {
     val resource: InputStream = getClass().getClassLoader().getResourceAsStream("dMajorScaleRecorder.wav");
     val wave = new WaveFileReader(resource)
+    //val wave = new WaveFileReader("C:\\MFF\\rozehra\\tempo_train_data\\train3.wav")
     val spectrogram = wave.toTimeDomainWaveForm.segmentToWindows(1024, 512).toSpectrogram
 
     val visualzer = new Visualizer()
@@ -62,8 +65,8 @@ class NoteOnsetTest extends FunSuite {
     println(tempo)
     visualzer.drawTempo(tempo)
 
-    val tracks = PartialTracking.partialTracking(spectrogram.spectra)
-    visualzer.drawPartialTracks(scala.collection.JavaConversions.asJavaList(tracks.toSeq))
+    //val tracks = PartialTracking.partialTracking(spectrogram.spectra.map())
+    //visualzer.drawPartialTracks(scala.collection.JavaConversions.asJavaList(tracks.toSeq))
     readLine()
-  }*/
+  }
 }

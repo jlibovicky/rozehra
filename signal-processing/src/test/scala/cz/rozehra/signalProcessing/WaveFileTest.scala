@@ -4,9 +4,6 @@ import cz.rozehra.signalProcessing._
 import org.scalatest.junit.JUnitRunner
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import java.io._
-import scalala.library.Plotting
-
 
 
 @RunWith(classOf[JUnitRunner])

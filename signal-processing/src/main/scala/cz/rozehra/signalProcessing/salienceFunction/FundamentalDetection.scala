@@ -1,12 +1,10 @@
 package cz.rozehra.signalProcessing.salienceFunction
 
-/**
- * Created with IntelliJ IDEA.
- * User: Jindrich
- * Date: 12/22/12
- * Time: 11:58 AM
- * To change this template use File | Settings | File Templates.
- */
-object FundamentalDetection {
+import cz.rozehra.signalProcessing.{Spectrogram, Signal}
 
+object FundamentalDetection {
+  def detectFundamentals(spectrogram: Spectrogram[Signal]) = {
+    //spectrogram.spectra.map(new FundamentalsDetector(_).findFundamentals).toList
+    spectrogram.spectra.par.map(new FundamentalsDetector(_).findFundamentals).toList
+  }
 }

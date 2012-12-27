@@ -4,6 +4,8 @@ import cz.rozehra.signalProcessing.Spectrogram;
 import cz.rozehra.signalProcessing.Spectrum;
 import cz.rozehra.signalProcessing.partialtracking.Track;
 import cz.rozehra.signalProcessing.tempo.Tempo;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,6 +17,7 @@ class SpectrogramDrawer extends JPanel {
     private List<Double> onsetTimes;
     private Tempo tempo;
     private List<Track> partialTracks;
+    private List<Seq<Double>> fundamentals;
 
     public SpectrogramDrawer() {
         setLayout(null);
@@ -32,6 +35,10 @@ class SpectrogramDrawer extends JPanel {
 
     public void addTempo(Tempo tempo) {
         this.tempo = tempo;
+    }
+
+    public void addFundamentalsCandidates(List<Seq<Double>> fundamentals) {
+        this.fundamentals = fundamentals;
     }
 
     public void addPartialTracks(List<Track> partialTracks) {
@@ -58,7 +65,7 @@ class SpectrogramDrawer extends JPanel {
                 int colorIntensity = (int)Math.round(255.0 - (255.0 * (Double)(s.amplitudes().apply(i)) / maximum));
 
                 g.setColor(new Color(colorIntensity, colorIntensity, colorIntensity));
-                g.fillRect(Visualizer.horizontalShift + Visualizer.horizontalScale * spectumCount, s.amplitudes().size() - i, 2, 1);
+                g.fillRect(Visualizer.horizontalScale * spectumCount, s.amplitudes().size() - i, 2, 1);
             }
         }
 
@@ -87,6 +94,7 @@ class SpectrogramDrawer extends JPanel {
 
         if (onsetTimes != null) {  paintOnsets(g); }
         if (tempo != null) { paintTempo(g); }
+        if (fundamentals != null) { paintFundamentals(g); }
         if (partialTracks != null) { paintTracks(g); }
         if (timeRectangle != -1) { paintTimeRectangle(g); }
     }
@@ -124,8 +132,25 @@ class SpectrogramDrawer extends JPanel {
 
     }
 
+    private void paintFundamentals(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+
+        g2d.setColor(new Color(255, 0, 0, 0.5f));
+
+        int spectrumCount = 0;
+        for (Seq<Double> candidates : fundamentals) {
+            int horizontalPos = Visualizer.horizontalScale * spectrumCount;
+            for (Double frequency : JavaConverters.asJavaIterableConverter(candidates).asJava()) {
+                g.drawRect(horizontalPos, spectrogram.bandsCount() -
+                        (int)(frequency * spectrogram.bandsCount() / spectrogram.maxFrequency()), 1, 1);
+            }
+
+            spectrumCount++;
+        }
+    }
+
     private void paintTracks(Graphics g) {
-        g.setColor(Color.RED);
+        g.setColor(new Color(150, 0, 0));
 
         for(Track t: partialTracks) {
             int verticalPos =  spectrogram.bandsCount() - (int)(t.averageFrequency() * spectrogram.bandsCount() / spectrogram.maxFrequency());
@@ -135,7 +160,7 @@ class SpectrogramDrawer extends JPanel {
     }
 
     private void paintTimeRectangle(Graphics g) {
-        g.setColor(Color.GREEN);
+        g.setColor(new Color(0, 0, 160));
         if (timeRectangle != -1) {
             g.drawRect(timeRectangle * Visualizer.horizontalScale - 1, 0,
                     Visualizer.horizontalScale + 1, spectrogram.bandsCount());
