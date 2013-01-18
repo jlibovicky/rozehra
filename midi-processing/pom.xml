@@ -1,13 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cz.rozehra</groupId>
-    <artifactId>signal-processing</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
-    <name>signal-processing</name>
+    <groupId>midi-processing</groupId>
+    <artifactId>midi-processing</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
     <properties>
         <maven.scala.plugin.version>2.15.0</maven.scala.plugin.version>
@@ -17,29 +16,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.0.13</version>
-        </dependency>
-
-        <dependency>
-        	<groupId>junit</groupId>
-        	<artifactId>junit</artifactId>
-        	<version>4.10</version>
-        </dependency>
-        
-        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.compiler.version}</version>
             <type>jar</type>
             <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-actors</artifactId>
-            <version>${scala.compiler.version}</version>
         </dependency>
 
         <dependency>
@@ -56,36 +37,18 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.0</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-stable</artifactId>
+            <version>3.6.6</version>
         </dependency>
 
     </dependencies>
-
-
-	<repositories>
-        <repository>
-            <id>scala-tools.org</id>
-            <name>Scala-Tools Maven2 Repository</name>
-            <url>http://scala-tools.org/repo-snapshots</url>
-        </repository>
-
-        <repository>
-            <id>scalanlp.org</id>
-            <name>ScalaNLP Maven2 Repository</name>
-            <url>http://repo.scalanlp.org/repo</url>
-        </repository>
-        
-	</repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>scala-tools.org</id>
-            <name>Scala-tools Maven2 Repository</name>
-            <url>http://scala-tools.org/repo-releases</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -95,8 +58,8 @@
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
                 <version>${maven.scala.plugin.version}</version>
-                                
-               <executions>
+
+                <executions>
                     <execution>
                         <id>scala-compile-first</id>
                         <phase>process-resources</phase>
@@ -114,11 +77,11 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-            
+
                 <executions>
                     <execution>
                         <id>add-source</id>
@@ -146,33 +109,7 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.2.2</version>
-                <executions>
-                    <execution>
-                        <id>appassemble</id>
-                        <goals>
-                            <goal>assemble</goal>
-                            <!--<goal>generate-daemons</goal> -->
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <programs>
-                        <program>
-                            <mainClass>cz.rozehra.signalProcessing.tempo.TempoEstimation</mainClass>
-                            <name>TempoEstimation</name>
-                        </program>
-                    </programs>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-    
-    
 
 </project>
