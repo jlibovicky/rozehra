@@ -42,7 +42,7 @@
   val intervalDeviation: Double,
   val normIntervalDeviation: Double,
 
-  // duration
+  // durationInBeats
   val longestNote: Double,
   val normLongestNote: Double,
 
@@ -70,7 +70,7 @@
     durationDeviation, Double.MinValue)
 
 
-  def addNormalized(minimumValues: TrackVector, maximumValues: TrackVector) = {
+  def addNormalizedVariables(minimumValues: TrackVector, maximumValues: TrackVector) = {
     def normalize(value : Double, min : Double, max : Double): Double = (value - min) / (max - min)
 
     new TrackVector(notes, melody,
@@ -98,12 +98,18 @@
 
   }
 
-  def writeARFF(data: Instances) {
-    val classificationValue: Double = if (melody) ProcessDir.fvMelodyVal.indexOf("YES")
-                                      else ProcessDir.fvMelodyVal.indexOf("NO")
+  def getWekaInstance: Instance = {
+    val classificationValue: Double = if (melody) WekaUtils.fvMelodyVal.indexOf("YES")
+                                      else WekaUtils.fvMelodyVal.indexOf("NO")
 
-    data.add(new Instance(1.0, numbersAsArray.+:(classificationValue)))
+    new Instance(1.0, numbersAsArray.+:(classificationValue))
   }
+
+ def getWekaInstanceWithDataSet: Instance = {
+   val instance = getWekaInstance
+   instance.setDataset(WekaUtils.dataset)
+   instance
+ }
 
  private def numbersAsArray: Array[Double] =
    Array(normalizedDuration, numberOfNotes, occupationRate, polyphonyRate, highestPith, normHighestPitch,

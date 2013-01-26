@@ -109,6 +109,44 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.2.2</version>
+                <executions>
+                    <execution>
+                        <id>appassemble</id>
+                        <goals>
+                            <goal>assemble</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <programs>
+                        <program>
+                            <mainClass>cz.rozehra.midi.MelodiesFromMidiWithClassifier</mainClass>
+                            <name>MelodiesFromMidiWithClassifier</name>
+                        </program>
+
+                        <program>
+                            <mainClass>cz.rozehra.midi.MelodiesFromTrainingData</mainClass>
+                            <name>MelodiesFromTrainingData</name>
+                        </program>
+
+                        <program>
+                            <mainClass>cz.rozehra.midi.GenerateSRILMdata</mainClass>
+                            <name>GenerateSRILMdata</name>
+                        </program>
+
+                        <program>
+                            <mainClass>cz.rozehra.midi.SRILMDataToMelody</mainClass>
+                            <name>SRILMDataToMelody</name>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

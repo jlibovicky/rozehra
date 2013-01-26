@@ -5,32 +5,39 @@ import java.io.File
 import math._
 import weka.core.{Instances, FastVector, Attribute}
 
-object FeatureExtractor {
+class FeatureExtractor(val file: File) {
   val NOTE_ON = 0x90
   val NOTE_OFF = 0x80
 
-  def parseMidiFile(file: File, arffDataSheet: Instances): Seq[TrackVector] = {
-    //println(file.getName)
-    val midiTracks = MidiSystem.getSequence(file).getTracks
+  println(file.getName)
 
-    val notNormalizedVectors = midiTracks.map(processTrack).filter(_ != null)
-    val maximumTrack = getMaximumVector(notNormalizedVectors)
-    val minimumTrack = getMinimumVector(notNormalizedVectors)
+  private val tempos = collection.mutable.Seq.empty[(Long, Long)]
 
-    val normalizedTrackVectors = notNormalizedVectors.map(_.addNormalized(minimumTrack, maximumTrack))
-    generateARFF(arffDataSheet, normalizedTrackVectors)
-    normalizedTrackVectors.toSeq
+  val tracks = processTracks
+
+  private def processTracks = {
+    val sequence = MidiSystem.getSequence(file)
+    val resolution = sequence.getResolution
+
+    val midiTracks = sequence.getTracks
+    val notNormalizedVectors = midiTracks.drop(1).map(processSingleTrack(_, resolution)).filter(_ != null)
+    if (!notNormalizedVectors.isEmpty) {
+      processTempoTrack(midiTracks(0))
+      val maximumTrack = getMaximumVector(notNormalizedVectors)
+      val minimumTrack = getMinimumVector(notNormalizedVectors)
+
+      notNormalizedVectors.map(_.addNormalizedVariables(minimumTrack, maximumTrack)).toSeq
+    }
+    else Seq.empty
   }
 
-  private def processTrack(track: Track): TrackVector =  {
+  private def processSingleTrack(track: Track, resolution: Int): TrackVector =  {
     var openNotes =  collection.mutable.Map.empty[Int, Note]
     var finishedNotes = collection.mutable.Set.empty[Note]
 
     var melody = false
     var startTime = -1l
     var endTime = -1l
-    var currentTempo: Long = 500000
-
     // ... we should count time when there's silence ot be able to compute
     //  the occupation rate
     var lastSilenceStart: Long = 0
@@ -53,11 +60,6 @@ object FeatureExtractor {
           //println(trackName)
           melody = trackName.matches(".*--BBOK.*")
         }
-        else if (msg.getType == 81) { // = tempo
-          currentTempo = msg.getData()(0).asInstanceOf[Long] * 65536 +
-                         msg.getData()(1).asInstanceOf[Long] * 256 +
-                         msg.getData()(2)
-        }
         else if (msg.getType == 47) { // = end of track
           endTime = time
         }
@@ -69,10 +71,10 @@ object FeatureExtractor {
         if (msg.getCommand == NOTE_ON && msg.getData2 > 0) {
           if (openNotes.isEmpty) silenceTime += time - lastSilenceStart
           if (openNotes.size == 1) lastPolyphonyStart = time
-          openNotes += ((msg.getData1, new Note(msg.getData1, time, currentTempo)))
+          openNotes += ((msg.getData1, new Note(msg.getData1, (time + 0.0) / resolution, getTempoAtTime(time))))
         }
-        else if ((msg.getCommand == NOTE_OFF || msg.getCommand == NOTE_ON && msg.getData2 == 0) && openNotes.contains(msg.getData1))  {
-          finishedNotes += openNotes(msg.getData1).finished(time)
+        else if ((msg.getCommand == NOTE_OFF || (msg.getCommand == NOTE_ON && msg.getData2 == 0)) && openNotes.contains(msg.getData1))  {
+          finishedNotes += openNotes(msg.getData1).finished((time + 0.0) / resolution)
           // start a period of silence =>
           if (openNotes.isEmpty) lastSilenceStart = time
           // number of open notes has decreased from 2 to 1 =>
@@ -108,7 +110,7 @@ object FeatureExtractor {
       val intervalMode = mode(intervals)
 
       // note durations
-      val durations = finishedNotes.map(_.durationInBeats)
+      val durations = finishedNotes.map(_.durationInMillis + 0.0)
       val longestDuration = durations.max
       val shortestDuration = durations.min
       val durationMean = mean(durations)
@@ -122,18 +124,42 @@ object FeatureExtractor {
     }
   }
 
-  def meanInt(set: Iterable[Int]): Double = set.foldLeft(0.0)(_ + _.asInstanceOf[Double]) / set.size
-  def mean(set: Iterable[Double]): Double = set.foldLeft(0.0)(_ + _) / set.size
+  private def processTempoTrack(track: Track): Seq[(Long, Long)] = {
 
-  def stdevInt(mean: Double, set: Iterable[Int]) = sqrt(set.map(n => pow(n - mean, 2.0)).foldLeft(0.0)(_ + _) / set.size)
-  def stdev(mean: Double, set: Iterable[Double]) = sqrt(set.map(n => pow(n - mean, 2.0)).foldLeft(0.0)(_ + _) / set.size)
+    for (event <- (0 until track.size) map (track.get(_))) {
+      val time = event.getTick
+
+      if (event.getMessage.isInstanceOf[MetaMessage]) {
+        val msg = event.getMessage.asInstanceOf[MetaMessage]
+
+        if (msg.getType == 81)  // = tempo message
+          tempos :+ (time, msg.getData()(0).asInstanceOf[Long] * 65536 +
+                         msg.getData()(1).asInstanceOf[Long] * 256 +
+                         msg.getData()(2))
+      }
+    }
+    tempos.toSeq
+  }
+
+  private def getTempoAtTime(time: Long): Long = {
+    var previousTempo = 500000l
+    for ((tempoTime, tempo) <- tempos) {
+      if (time > tempoTime) return tempo
+      previousTempo = tempo
+    }
+    previousTempo
+  }
+
+  private def meanInt(set: Iterable[Int]): Double = set.foldLeft(0.0)(_ + _.asInstanceOf[Double]) / set.size
+  private def mean(set: Iterable[Double]): Double = set.foldLeft(0.0)(_ + _) / set.size
+
+  private def stdevInt(mean: Double, set: Iterable[Int]) = sqrt(set.map(n => pow(n - mean, 2.0)).foldLeft(0.0)(_ + _) / set.size)
+  private def stdev(mean: Double, set: Iterable[Double]) = sqrt(set.map(n => pow(n - mean, 2.0)).foldLeft(0.0)(_ + _) / set.size)
 
   def mode(set: Iterable[Int]) = set.foldLeft(Map.empty[Int, Int])(
     (map, interval: Int) => if (map.contains(interval)) map.updated(interval, map(interval) + 1)
                        else map + ((interval, 1))
   ).maxBy(_._2)._1
-
-  private def generateARFF(data: Instances, tracks: Iterable[TrackVector]) { tracks.foreach(_.writeARFF(data)) }
 
   // !! an ugly partially automatically generated code starts ....
   private def getMinimumVector(tracks: Iterable[TrackVector]): TrackVector = {
