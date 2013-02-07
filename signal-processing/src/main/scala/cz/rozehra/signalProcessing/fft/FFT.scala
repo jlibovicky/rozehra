@@ -26,7 +26,15 @@ object FFT {
     newWindowVector.toIndexedSeq
   }
 
-  //def hanningWindow
+  def hanningWindow[T <: Double](original: IndexedSeq[T]): immutable.IndexedSeq[T] = {
+    val N = original.size
+    val newWindowVector: mutable.IndexedSeq[T] = mutable.IndexedSeq.fill(N)(0.0.asInstanceOf[T])
+
+    for (i <- 0 until original.size)
+      newWindowVector(i) = (0.5 * (1 - cos(2 * Pi * i / (N - 1.0))) * original(i)).asInstanceOf[T]
+
+    newWindowVector.toIndexedSeq
+  }
 
   private def padder(data: Seq[Double]) : Seq[Double] = {
     val closestPow2 = pow(2, ceil(log(data.size) / log(2.0))).asInstanceOf[Int]

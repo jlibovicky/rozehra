@@ -5,8 +5,6 @@ import math._
 
 
 abstract trait GenericPartialTracking[T <: Double] {
-  def medianMultiply: Double
-
   def toneTolerance: Double
   def maximumWithoutUpdate: Int
   def minimumTrackDensity: Double

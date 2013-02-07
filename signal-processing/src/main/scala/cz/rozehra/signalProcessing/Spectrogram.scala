@@ -3,11 +3,6 @@ package cz.rozehra.signalProcessing
 class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Spectrum[T]],
     val signalWindowSize: Int, val signalWindowShift: Int) {
 
-  val bandWidth = spectra.head.bandWidth
-  val bandsCount = spectra.head.amplitudes.size
-  val spectrumDuration = spectra.head.duration
-  val maxFrequency = spectra.head.maxFrequency
-
 /*  def generateSignal: TimeDomainWaveForm[T] = {
     val samplingRate = 2 * spectra.head.maxFrequency
     val listOfWindows = spectra.map(spectrum => spectrum.generateWindow.samples)

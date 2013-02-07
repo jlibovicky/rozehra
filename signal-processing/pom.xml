@@ -167,6 +167,22 @@
                             <mainClass>cz.rozehra.signalProcessing.tempo.TempoEstimation</mainClass>
                             <name>TempoEstimation</name>
                         </program>
+
+                        <program>
+                            <jvmSettings>
+                                <maxMemorySize>1g</maxMemorySize>
+                            </jvmSettings>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizeTempoEstimation</mainClass>
+                            <name>TempoEstimationOptimization</name>
+                        </program>
+
+                        <program>
+                            <jvmSettings>
+                                <maxMemorySize>2g</maxMemorySize>
+                            </jvmSettings>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizePartialTracking</mainClass>
+                            <name>PartialTrackingOptimization</name>
+                        </program>
                     </programs>
                 </configuration>
             </plugin>

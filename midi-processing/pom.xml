@@ -144,6 +144,11 @@
                             <mainClass>cz.rozehra.midi.SRILMDataToMelody</mainClass>
                             <name>SRILMDataToMelody</name>
                         </program>
+
+                        <program>
+                            <mainClass>cz.rozehra.midi.MelodySnippetsLength</mainClass>
+                            <name>MelodySnippetsLength</name>
+                        </program>
                     </programs>
                 </configuration>
             </plugin>

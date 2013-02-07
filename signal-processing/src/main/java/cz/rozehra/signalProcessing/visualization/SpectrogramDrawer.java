@@ -135,7 +135,7 @@ class SpectrogramDrawer extends JPanel {
     private void paintFundamentals(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
 
-        g2d.setColor(new Color(255, 0, 0, 0.5f));
+        g2d.setColor(new Color(255, 0, 0));
 
         int spectrumCount = 0;
         for (Seq<Double> candidates : fundamentals) {

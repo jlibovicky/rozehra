@@ -11,7 +11,7 @@ package object tempo {
    *         note onsets
    */
   def rhythmicAnalysis(signal: TimeDomainWaveForm[Signal]): (Tempo, Seq[Time]) = {
-    val energyFlux = EnergyFluxComputation.computeEnergyFlux(signal)
+    val energyFlux = DefaultEnergyFluxComputation.computeEnergyFlux(signal)
 
     // first compute the times of note onsets ...
     val noteOnsets = NoteOnsetDetection.computeNoteOnsetTimes(energyFlux)

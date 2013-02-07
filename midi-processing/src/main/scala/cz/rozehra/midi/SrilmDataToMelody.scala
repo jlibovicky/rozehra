@@ -1,10 +1,10 @@
 package cz.rozehra.midi
 
-import scala.math.pow
+import scala.math.{pow, min, max}
 
 object SRILMDataToMelody {
   private val tempo = 500000l
-  private val firstNote = new Note(86, 0, 1, tempo)
+  private val firstNote = new Note(64, 0, 1, tempo)
 
   def melodyFromSRILMSentence(sentence: String, format: LMFormat.LMFormat): Melody = {
     var notes = Seq(firstNote)
@@ -12,14 +12,14 @@ object SRILMDataToMelody {
     var previousNote = firstNote
     var lastPauseDuration = 0.0
     for (intervalString <- sentence.split(" ")) {
-      if (intervalString.matches("pause.*")) {
-        val durationChange = intervalString.split(";")(0).toDouble
+      if (intervalString.startsWith("pause")) {
+        val durationChange = intervalString.split(";")(1).toDouble
         val durationMult = getDurationMult(durationChange, format)
         lastPauseDuration = previousNote.durationInBeats * durationMult
       }
       else {
         val pitchInterval = intervalString.split(";")(0).toInt
-        val durationChange = intervalString.split(";")(0).toDouble
+        val durationChange = intervalString.split(";")(1).toDouble
 
         // determine the real ratio between the previous note / pause duration and this note
         val durationMult = getDurationMult(durationChange, format)
@@ -28,7 +28,8 @@ object SRILMDataToMelody {
                            else lastPauseDuration * durationMult
         val noteStart = previousNote.end + lastPauseDuration
 
-        val newNote = new Note(previousNote.pitch + pitchInterval, noteStart, noteStart + realDuration, tempo)
+        val newNote = new Note(
+          min(127, max(0, previousNote.pitch + pitchInterval)), noteStart, noteStart + realDuration, tempo)
         notes :+= newNote
 
         previousNote = newNote
@@ -44,10 +45,11 @@ object SRILMDataToMelody {
   }
 
   def main(args: Array[String]) {
+    val name = if (args.size > 0) args(0) else "melody"
     var count = 0
 
     for( ln <- io.Source.stdin.getLines ) {
-      melodyFromSRILMSentence(ln, LMFormat.Round1Rat).saveAsMidi("melody" + count + ".mid")
+      melodyFromSRILMSentence(ln, LMFormat.Round1Rat).saveAsMidi(name + count + ".mid")
       count += 1
     }
   }

@@ -83,8 +83,29 @@ class Melody (val notes: Array[Note]) extends Serializable {
 
   import LMFormat._
 
+  private val noPlace = new DecimalFormat("#")
   private val onePlace = new DecimalFormat("#.#")
   private val twoPlaces = new DecimalFormat("#.##")
+
+  private def formatTime(format: LMFormat, number: Double): String = {
+    def notNegativeZero(num: Double) = if (num == -0.0) 0.0 else num
+    if (format == Round1Rat) {
+      onePlace.format(notNegativeZero(number))
+    }
+    else if (format == Round0Rat) {
+      noPlace.format(notNegativeZero(number))
+    }
+    else if (format == Round2Rat) {
+      twoPlaces.format(notNegativeZero(number))
+    }
+    else if (format == Round1Log) {
+      onePlace.format((notNegativeZero(log(number) / log(2))))
+    }
+    else if (format == Round2Log) {
+      twoPlaces.format((notNegativeZero(log(number) / log(2))))
+    }
+    else null
+  }
 
   def getLMNotation(format: LMFormat): String = {
     val builder = new StringBuilder
@@ -97,16 +118,7 @@ class Melody (val notes: Array[Note]) extends Serializable {
 
       if (pauseDuration > 30) {
         builder ++= "pause;"
-
-        if (format == Round1Rat) {
-          builder ++= onePlace.format(pauseDuration / previousNote.durationInMillis)
-        }
-        else if (format == Round1Log) {
-          builder ++= onePlace.format(log(pauseDuration / previousNote.durationInMillis) / log(2))
-        }
-        else if (format == Round2Log) {
-          builder ++= twoPlaces.format(log(pauseDuration / previousNote.durationInMillis) / log(2))
-        }
+        builder ++= formatTime(format, pauseDuration / previousNote.durationInMillis)
 
         builder ++= " "
         previousDuration = pauseDuration
@@ -118,15 +130,7 @@ class Melody (val notes: Array[Note]) extends Serializable {
       builder ++= (previousNote.pitch - note.pitch).toString
       builder ++= ";"
 
-      if (format == Round1Rat) {
-        builder ++= onePlace.format(modifiedNote.durationInMillis / previousDuration)
-      }
-      else if (format == Round1Log) {
-        builder ++= onePlace.format(log(modifiedNote.durationInMillis / previousDuration) / log(2))
-      }
-      else if (format == Round2Log) {
-        builder ++= twoPlaces.format(log(modifiedNote.durationInMillis / previousDuration) / log(2))
-      }
+      builder ++= formatTime(format, modifiedNote.durationInMillis / previousDuration)
 
       builder ++= " "
       previousNote = note
@@ -135,4 +139,13 @@ class Melody (val notes: Array[Note]) extends Serializable {
     builder ++= "\n"
     builder.toString()
   }
+
+  def getMelodyLength: Double = {
+    val notesLength = notes.foldLeft(0.0)( _ + _.durationInMillis )
+    val spacesLength = (notes.take(notes.size - 1) zip notes.drop(1)).map(
+      s => (s._1.tempo + s._2.tempo) / 2 * (s._2.start - s._1.end) / 1000.0).foldLeft(0.0)(_ + _)
+    spacesLength + notesLength
+  }
+
+
 }

@@ -24,7 +24,7 @@ class NoteOnsetTest extends FunSuite {
     val visualzer = new Visualizer()
     visualzer.drawSpectrum(spectrogram)
 
-    val energyFlux = EnergyFluxComputation.computeEnergyFlux(wave.toTimeDomainWaveForm)
+    val energyFlux = DefaultEnergyFluxComputation.computeEnergyFlux(wave.toTimeDomainWaveForm)
     val onsets = NoteOnsetDetection.computeNoteOnsetTimes(energyFlux)
     onsets.foreach( t => println(t))
     visualzer.drawNoteOnsets(scala.collection.JavaConversions.asJavaList(onsets.asInstanceOf[Seq[java.lang.Double]]))
@@ -38,7 +38,7 @@ class NoteOnsetTest extends FunSuite {
     val resource: InputStream = getClass().getClassLoader().getResourceAsStream("dMajorScaleRecorder.wav");
     val wave = new WaveFileReader(resource)
 
-    val energyFlux = EnergyFluxComputation.computeEnergyFlux(wave.toTimeDomainWaveForm)
+    val energyFlux = DefaultEnergyFluxComputation.computeEnergyFlux(wave.toTimeDomainWaveForm)
     val fluxSpectrogram = TempoEstimation.fluxSpectrogram(energyFlux)
 
 

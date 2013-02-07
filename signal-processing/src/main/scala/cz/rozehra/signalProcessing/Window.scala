@@ -15,10 +15,15 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val s
         sumSequences[T](samples, that.samples)
         
     def toSpectrum: Spectrum[T] = {
-
       val spectrum = FFT.powerSpectrum(FFT.hammingWindow(samples))
       val bandWidth: Frequency = samplingRate / 2 / spectrum.length 
-      new Spectrum[T](withShift, bandWidth, spectrum.asInstanceOf[IndexedSeq[T]])
+      new Spectrum[T](withShift, bandWidth, spectrum)
+    }
+
+    def toZeroPaddedSpectrum: Spectrum[T] = {
+      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples ++ IndexedSeq.fill(samples.size)(0.0)))
+      val bandWidth: Frequency = samplingRate / spectrum.length
+      new Spectrum[T](2 * withShift, bandWidth, spectrum.asInstanceOf[IndexedSeq[T]])
     }
 
     def getEnergy: Energy = {

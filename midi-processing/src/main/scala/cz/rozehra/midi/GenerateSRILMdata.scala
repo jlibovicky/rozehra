@@ -29,14 +29,33 @@ object GenerateSRILMdata {
           val randomlyOrdered = Random.shuffle(melodies)
           val (testSet, trainSet) = randomlyOrdered.splitAt((0.1 * randomlyOrdered.size).asInstanceOf[Int])
 
-          // 1. create ratio data
-          val ratioTrainingFile = new BufferedWriter(new FileWriter(style + "-rat.train"))
-          val ratioTestFile = new BufferedWriter(new FileWriter(style + "-rat.test"))
+          // 1. create ratio data - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+          val ratio0TrainingFile = new BufferedWriter(new FileWriter(style + "-rat0.train"))
+          val ratio0TestFile = new BufferedWriter(new FileWriter(style + "-rat0.test"))
 
-          trainSet.map( m => ratioTrainingFile.write(m.getLMNotation(LMFormat.Round1Rat)) )
-          testSet.map( m => ratioTestFile.write(m.getLMNotation(LMFormat.Round1Rat)) )
+          trainSet.map( m => ratio0TrainingFile.write(m.getLMNotation(LMFormat.Round0Rat)) )
+          testSet.map( m => ratio0TestFile.write(m.getLMNotation(LMFormat.Round0Rat)) )
 
-          // 2. create the log - round 1 data
+          ratio0TrainingFile.close()
+          ratio0TestFile.close()
+
+          // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+          val ratio1TrainingFile = new BufferedWriter(new FileWriter(style + "-rat1.train"))
+          val ratio1TestFile = new BufferedWriter(new FileWriter(style + "-rat1.test"))
+
+          trainSet.map( m => ratio1TrainingFile.write(m.getLMNotation(LMFormat.Round1Rat)) )
+          testSet.map( m => ratio1TestFile.write(m.getLMNotation(LMFormat.Round1Rat)) )
+
+          // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+          val ratio2TrainingFile = new BufferedWriter(new FileWriter(style + "-rat2.train"))
+          val ratio2TestFile = new BufferedWriter(new FileWriter(style + "-rat2.test"))
+
+          trainSet.map( m => ratio2TrainingFile.write(m.getLMNotation(LMFormat.Round2Rat)) )
+          testSet.map( m => ratio2TestFile.write(m.getLMNotation(LMFormat.Round2Rat)) )
+
+          // 2. create the log data - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
           val log1TrainingFile = new BufferedWriter(new FileWriter(style + "-log1.train"))
           val log1TestFile = new BufferedWriter(new FileWriter(style + "-log1.test"))
@@ -44,7 +63,7 @@ object GenerateSRILMdata {
           trainSet.map( m => log1TrainingFile.write(m.getLMNotation(LMFormat.Round1Log)) )
           testSet.map( m => log1TestFile.write(m.getLMNotation(LMFormat.Round1Log)) )
 
-          // 3. create the log - round 2 data
+          // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
           val log2TrainingFile = new BufferedWriter(new FileWriter(style + "-log2.train"))
           val log2ioTestFile = new BufferedWriter(new FileWriter(style + "-log2.test"))
