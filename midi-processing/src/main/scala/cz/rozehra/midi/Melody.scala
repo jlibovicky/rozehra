@@ -136,7 +136,6 @@ class Melody (val notes: Array[Note]) extends Serializable {
       previousNote = note
     }
 
-    builder ++= "\n"
     builder.toString()
   }
 
@@ -146,6 +145,4 @@ class Melody (val notes: Array[Note]) extends Serializable {
       s => (s._1.tempo + s._2.tempo) / 2 * (s._2.start - s._1.end) / 1000.0).foldLeft(0.0)(_ + _)
     spacesLength + notesLength
   }
-
-
 }

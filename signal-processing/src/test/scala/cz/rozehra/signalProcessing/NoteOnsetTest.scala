@@ -29,7 +29,7 @@ class NoteOnsetTest extends FunSuite {
     onsets.foreach( t => println(t))
     visualzer.drawNoteOnsets(scala.collection.JavaConversions.asJavaList(onsets.asInstanceOf[Seq[java.lang.Double]]))
 
-    val tracks = PartialTracking.partialTracking(spectrogram.spectra)
+    val tracks = PartialTrackingForFundamentals.partialTracking(spectrogram.spectra)
     visualzer.drawPartialTracks(scala.collection.JavaConversions.asJavaList(tracks.toSeq))
     readLine()
   } */
@@ -65,7 +65,7 @@ class NoteOnsetTest extends FunSuite {
     println(tempo)
     visualzer.drawTempo(tempo)
 
-    //val tracks = PartialTracking.partialTracking(spectrogram.spectra.map())
+    //val tracks = PartialTrackingForFundamentals.partialTracking(spectrogram.spectra.map())
     //visualzer.drawPartialTracks(scala.collection.JavaConversions.asJavaList(tracks.toSeq))
     readLine()
   }

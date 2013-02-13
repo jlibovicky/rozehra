@@ -6,11 +6,11 @@ import cz.rozehra.signalProcessing._
 class FundamentalsDetector(val spectrum: Spectrum[Signal]) {
   val alpha = 52.0 //27.0  // Hz
   val beta = 320.0 //320.0  // Hz
-  val minimumPeriod = spectrum.samplingRate / 2100.0  //  4.2 kHz  ... approx. the highest piano note
-  val maximumPeriod = spectrum.samplingRate / 10.0   // 20 Hz ... approx. the lowest piano tone
+  val minimumPeriod = spectrum.samplingRate / 4200.0  //  4.2 kHz  ... approx. the highest piano note
+  val maximumPeriod = spectrum.samplingRate / 1.0   // 20 Hz ... approx. the lowest piano tone
   val harmonicsCount = 10
   val deltaPeriod = 0.5 //
-  val periodPrecision = 1.0 //0.5 // ??? compute how much are these in frequency and think about it
+  val periodPrecision = 1e-12 //0.5 // ??? compute how much are these in frequency and think about it
   val foundSoundSubtraction = 0.89 // 1.0
   val gammaForStopMeasure = 0.7
   val maximumFundamentalsInSpectrum = 10
@@ -92,7 +92,7 @@ class FundamentalsDetector(val spectrum: Spectrum[Signal]) {
         val fundamentalIndex = floor(2 * amplitudes.size / newFundamentalPeriod._1).asInstanceOf[Int]
 
         detectedSound(fundamentalIndex) = amplitudes(fundamentalIndex)
-              for (m <- 2 to harmonicsCount) {
+        for (m <- 2 to harmonicsCount) {
           val index = floor(m * 2 * amplitudes.size / newFundamentalPeriod._1).asInstanceOf[Int]
           if (index < amplitudes.size + 1){
                 detectedSound(index) = gFunction(newFundamentalPeriod._1, m) * amplitudes(index)

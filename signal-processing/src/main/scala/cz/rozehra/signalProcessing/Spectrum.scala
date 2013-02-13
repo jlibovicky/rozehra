@@ -12,32 +12,30 @@ class Spectrum[T <: Double](val withWindowShift: Int, val bandWidth: Frequency, 
   val duration: Time = withWindowShift / samplingRate
   val bandsCount = amplitudes.size
 
-  def findPeaks: Set[(Frequency, Double)] = {
-    val medianMultiply: Double = 100.0
-    val median = (amplitudes.sortWith( (e1, e2) => e1 < e2))(amplitudes.size / 2)
-
-    // spectrum after filtering out values less than median
+  def findPeaks(delta: Double): Set[(Frequency, Double)] = {
     var peaks = Set.empty[(Frequency, Double)]
-    val s = amplitudes.map( a => if (a > median * medianMultiply) a else 0.0)
 
-    var inNonZeroArea = false
-    var tmpMaxIndex = -1
+    var minimum = (Double.NaN, Double.PositiveInfinity)
+    var maximum = (Double.NaN, Double.NegativeInfinity)
 
-    for (i <- 0 until s.size - 1) {
-      if (s(i) > 0 && !inNonZeroArea) {
-        inNonZeroArea = true
-        tmpMaxIndex = i
+    var lookForMax = true
+    for (i <- 0 until amplitudes.size) {
+      val value = amplitudes(i)
+      val frequency = i * bandWidth + bandWidth / 2
+
+      if (value > maximum._2) maximum = (frequency, value)
+      if (value < minimum._2) minimum = (frequency, value)
+
+      if (lookForMax && value < maximum._2 - delta) {
+        peaks += maximum
+        minimum = (frequency, value)
+        lookForMax = false
       }
-      else if (s(i) == 0.0 && inNonZeroArea) {
-        inNonZeroArea = false
-        peaks += ((tmpMaxIndex.asInstanceOf[Double] * bandWidth, s(tmpMaxIndex)))
-        tmpMaxIndex = -1
-      }
-      else if (s(i) > 0 && inNonZeroArea) {
-        if (s(i) > s(tmpMaxIndex)) tmpMaxIndex = i
+      else if (value > minimum._2 + delta) {
+        maximum = (frequency, value)
+        lookForMax = true
       }
     }
-
     peaks
   }
 

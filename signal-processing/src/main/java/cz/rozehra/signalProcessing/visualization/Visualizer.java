@@ -80,11 +80,11 @@ public class Visualizer extends JFrame {
         frequencyScale.setPreferredSize(new Dimension(
                 (int)frequencyScale.getPreferredSize().getWidth(),
                 (int)scrollPane.getPreferredSize().getHeight()));
+        drawer.addMouseListener(
+                new SpectrumOnClickListener(spectrogram));
         drawer.addMouseMotionListener(
                 new SpectrumOnMouseListener(freqLabel, timeLabel,
                         spectrogram.bandWidth(), spectrogram.spectrumRate(), spectrogram.bandsCount()));
-        drawer.addMouseListener(
-                new SpectrumOnClickListener(spectrogram));
     }
 
     public void drawNoteOnsets(List<Double> noteOnsets) {

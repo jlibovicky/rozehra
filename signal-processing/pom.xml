@@ -180,7 +180,7 @@
                             <jvmSettings>
                                 <maxMemorySize>2g</maxMemorySize>
                             </jvmSettings>
-                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizePartialTracking</mainClass>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizePartialTrackingWithFundamentals$</mainClass>
                             <name>PartialTrackingOptimization</name>
                         </program>
                     </programs>
