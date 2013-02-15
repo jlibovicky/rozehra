@@ -12,8 +12,7 @@ object FFT {
   def powerSpectrum[T <: Double](input: IndexedSeq[T]) = {
     val data = padder(input)
     val outComplex = fft(data)
-    val out = outComplex.take((data.length / 2) + 1).map(_.abs).toIndexedSeq
-    out.map(i => (i / sqrt(data.length)).asInstanceOf[T]) // Power Spectral Density Output
+    outComplex.take((data.length / 2) + 1).par.map(n => (n.abs / sqrt(data.length)).asInstanceOf[T]).toIndexedSeq
   }
 
   def hammingWindow[T <: Double](original: IndexedSeq[T]): immutable.IndexedSeq[T] = {

@@ -8,7 +8,7 @@ class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
     AbstractSearchTrack(frequencies, start, end) {
   private val octavePenalty = TrackSelectionParameters.octavePenalty
   private val durationTolerance = TrackSelectionParameters.durationTolerance
-  private val timeStep = TrackSelectionParameters.durationTolerance
+  private val timeStep = TrackSelectionParameters.timeStep
   private val durationWeight = TrackSelectionParameters.durationTolerance
 
   def duration = end - start
@@ -18,33 +18,41 @@ class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
     val tonesSd = sqrt(tones.foldLeft(0.0)( (s, f) => s + pow(f - tonesMean, 2.0)) / tones.size)
 
     var scoredPitches = Set.empty[(Int, Double)]
-    for (tone <- Set(floor(tonesMean).asInstanceOf[Int] - 1, floor(tonesMean).asInstanceOf[Int],
-        ceil(tonesMean).asInstanceOf[Int], ceil(tonesMean).asInstanceOf[Int] + 1 )) {
+    for (tone <- if (tonesSd > 0) Set(floor(tonesMean).asInstanceOf[Int] - 1, floor(tonesMean).asInstanceOf[Int],
+                                   ceil(tonesMean).asInstanceOf[Int], ceil(tonesMean).asInstanceOf[Int] + 1 )
+                 else Set(floor(tonesMean).asInstanceOf[Int], ceil(tonesMean).asInstanceOf[Int])) {
       val toneDist = new NormalDistribution(tone, 0.5)
-      val score = toneDist.cumulativeProbability(tonesMean - tonesSd, tonesMean + tonesSd)
+      val score = if (tonesSd == 0) 1 - abs(tone - tonesMean)
+                  else toneDist.cumulativeProbability(tonesMean - tonesSd, tonesMean + tonesSd)
 
       scoredPitches += ((tone, score))
       if (tone > 12) scoredPitches += ((tone - 12, octavePenalty * score))
       if (tone < 115) scoredPitches += ((tone + 12, octavePenalty * score))
     }
 
+    val pitchScoreSum = scoredPitches.foldLeft(0.0)(_ + _._2)
+    val normedScoredPitches = scoredPitches.map(p => (p._1, p._2 / pitchScoreSum))
+
     val durationInterval = durationTolerance * (end - start)
-    val stepsCount = round(durationTolerance / timeStep).asInstanceOf[Int]
+    val stepsCount = round(durationInterval / timeStep).asInstanceOf[Int]
 
     val startLeftBound = round((start - durationInterval) * 100) / 100
-    val startPossibilities = (0 to stepsCount).map(startLeftBound + _ * stepsCount)
+    val startPossibilities = (0 to stepsCount).map(startLeftBound + _ * timeStep)
 
     val endLeftBound = round((start - durationInterval) * 100) / 100
-    val endPossibilities = (0 to stepsCount).map(endLeftBound + _ * stepsCount)
+    val endPossibilities = (0 to stepsCount).map(endLeftBound + _ * timeStep)
 
     val scoredTimeIntervals = (for (s <- startPossibilities; e <- endPossibilities) yield (s, e)).
+      filter( interval => interval._1 < interval._2).
       map( interval => (interval, 1 - abs(duration - interval._1 + interval._2) / duration ) )
 
-    (for ( (pitch, pitchScore) <- scoredPitches; (interval, durationScore) <- scoredTimeIntervals)
+    val totalDurationScore = scoredTimeIntervals.foldLeft(0.0)(_ + _._2)
+    val normedScoredTimeIntervals = scoredTimeIntervals.map(p => (p._1, p._2 / totalDurationScore))
+
+    (for ( (pitch, pitchScore) <- normedScoredPitches; (interval, durationScore) <- normedScoredTimeIntervals)
       yield (new Note(pitch, interval._1, interval._2), pitchScore * pow(durationScore, durationWeight))).toSeq.
         sortBy(_._2)
   }
 
   private def toneFromFreq(frequency: Double): Double = 69.0 + 12 * log(frequency / 440.0) / log(2.0)
-
 }

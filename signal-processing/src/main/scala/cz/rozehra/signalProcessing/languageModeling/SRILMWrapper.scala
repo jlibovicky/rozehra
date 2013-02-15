@@ -1,19 +1,19 @@
 package cz.rozehra.signalProcessing.languageModeling
 
-import java.io.{BufferedReader, BufferedWriter, InputStreamReader, OutputStreamWriter}
+import java.io._
 import cz.rozehra.signalProcessing.trackSelection.{Note, Hypothesis}
 import cz.rozehra.signalProcessing.languageModeling.LMFormat.LMFormat
-import scala.math.{round, log}
-//import sys.process._
+import scala.math.{round}
+import util.control.Breaks
 
 class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmFormat: LMFormat) extends LanguageModel  {
   def this(pathToModel: String, lmFormat: LMFormat) = this("ngram", pathToModel, lmFormat)
 
+  val pathToLogFile = "srilm-last.log"
   // start the server process
-  private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-lm",
+  private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "3", "-lm",
     pathToModel, "-server-port", "19000").start
   serverProcess.getErrorStream.read // wait until the server is started
-
 
   /**
    * Rescores the list of hypothesis and returns it in the new order.
@@ -21,33 +21,40 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
    * @return New list of hypotheses
    */
   def rescoreNBest(nBest: Iterable[Hypothesis]): Seq[Hypothesis] = {
-    val rescoreProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-use-server", "19000", "-rescore", "-").start()
-    val rescoreWriter = new BufferedWriter(new OutputStreamWriter(rescoreProcess.getOutputStream))
-    val rescoreReader = new BufferedReader(new InputStreamReader(rescoreProcess.getInputStream))
+    if (nBest.isEmpty) Seq.empty[Hypothesis]
+    else {
+      val logger = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(pathToLogFile)))
+      val stringToHypothesis = collection.mutable.Map.empty[String, Hypothesis]
+      for (hypothesis <- nBest) {
+        val SRILMString = hypothesis.SRILMString(lmFormat)
+        stringToHypothesis += ((SRILMString, hypothesis))
+        logger.write("(" + round(hypothesis.score) + ") " + SRILMString + "\n")
+      }
+      logger.close
 
-    val stringToHypothesis = collection.mutable.Map.empty[String, Hypothesis]
-    for (hypothesis <- nBest) {
-      val SRILMString = hypothesis.SRILMString(lmFormat)
-      stringToHypothesis += ((SRILMString, hypothesis))
-      rescoreWriter.write("(" + round(hypothesis.score) + ") " + SRILMString)
-      println("\t\t> (" + round(hypothesis.score) + ") " + SRILMString)
-      rescoreWriter.newLine
+      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-use-server", "19000",
+        "-nbest" + pathToLogFile).start
+      val ngramReader = new BufferedReader(new InputStreamReader(ngramProcess.getInputStream))
+
+      var reWeightedHypotheses = Seq.empty[(Double, Hypothesis)]
+      val loop = new Breaks
+      loop.breakable(
+        while (true)  {
+          val line = ngramReader.readLine()
+          if (line == null) loop.break()
+          val parsedLine = line.split(" ")
+
+          val logScore = parsedLine(1).toDouble
+          val notesCount = parsedLine(2).toInt
+          val SRILMString = parsedLine.drop(3).mkString(" ")
+
+          reWeightedHypotheses :+= (logScore / notesCount, stringToHypothesis(SRILMString))
+        }
+      )
+
+      if (reWeightedHypotheses.isEmpty) nBest.toSeq.sortBy(_.score)
+      else reWeightedHypotheses.sortBy( -_._1).unzip._2
     }
-    rescoreWriter.close
-
-    var reWeightedHypotheses = Seq.empty[(Double, Hypothesis)]
-    for (i <- 0 until nBest.size) {
-      val line = rescoreReader.readLine()
-      val parsedLine = line.split(" ")
-
-      val logScore = parsedLine(1).toDouble
-      val notesCount = parsedLine(2).toInt
-      val SRILMString = parsedLine.drop(3).mkString(" ")
-
-      reWeightedHypotheses :+= (logScore / notesCount, stringToHypothesis(SRILMString))
-    }
-
-    reWeightedHypotheses.sortBy( -_._1).unzip._2
   }
 
   /**

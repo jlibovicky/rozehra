@@ -2,7 +2,7 @@ package cz.rozehra.signalProcessing.trackSelection
 
 import cz.rozehra.signalProcessing.languageModeling.{LMFormat, SRILMWrapper, LanguageModel}
 import cz.rozehra.signalProcessing.partialtracking.Track
-import math.{abs, log, min}
+import math.{abs, log, min, pow}
 
 
 object TrackSelection {
@@ -13,16 +13,16 @@ object TrackSelection {
   private val edgeCandidatesCount = TrackSelectionParameters.edgeCandidatesCount
 
   def run(tracks: Seq[SearchTrack]): Seq[Hypothesis] = {
-    val allHypoheses = iterateTrackSelection(Seq.empty, tracks, 0, Set.empty).map(_.hypotheses).flatten.
+    val allHypoheses = iterateTrackSelection(Seq.empty, tracks, 0, Seq.empty).map(_.hypotheses).flatten.
       groupBy(_.toString).map(_._2.maxBy(_.score))
 
     languageModel.rescoreNBest(allHypoheses).take(min(allHypoheses.size, 2 * nBestSize))
   }
 
-  def iterateTrackSelection(processedTracks: Seq[SearchTrackWithHypotheses],
+  private def iterateTrackSelection(processedTracks: Seq[SearchTrackWithHypotheses],
                             todoTracks: Seq[SearchTrack], count: Int,
-                            finalCandidates: Set[SearchTrackWithHypotheses]): Set[SearchTrackWithHypotheses] = {
-    if (todoTracks.isEmpty) finalCandidates
+                            lastTracks: Seq[SearchTrackWithHypotheses]): Seq[SearchTrackWithHypotheses] = {
+    if (todoTracks.isEmpty) lastTracks
     else {
       val thisTrack = todoTracks.head
 
@@ -41,39 +41,65 @@ object TrackSelection {
         newHypotheses += new Hypothesis(noteSeq, hypothesis.score + bytelog(noteScore))
       }
 
-      print("   >>> generated hypotheses: " + newHypotheses.size + ", ")
+      print("   >>> continuation hypotheses: " + newHypotheses.size + ", ")
 
       // there may the same hypothesis created different way ... tak those with maximum score
-      val uniqueHypotheses = newHypotheses.groupBy(_.toString).map( _._2.maxBy(_.score) )
+      val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.toString).map( _._2.maxBy(_.score) ))
 
-      println(uniqueHypotheses.size + " of them unique")
+      print(uniqueHypotheses.size + " of them unique")
 
       // rescore the hypotheses using the language model and keep the best ones
       val newNBest = languageModel.rescoreNBest(uniqueHypotheses).take(min(nBestSize, uniqueHypotheses.size))
 
       // if it is one of the first tracks, add the
-      val passOnHypotheses =
+      val passOnHypotheses = normalizeHypothesesDist[Seq[Hypothesis]](
         if (count < edgeCandidatesCount) {
           val beginnings = thisTrack.notePossibilities.map(
             n => new Hypothesis(Seq(n._1), bytelog(n._2))).sortBy(_.score)
           beginnings.take(min(beginnings.size, 2 * nBestSize)) ++ newNBest
         }
-        else newNBest
+        else newNBest)
 
+      println(", " + passOnHypotheses.size + " hypotheses kept")
       val thisTrackProcessed = new SearchTrackWithHypotheses(thisTrack, passOnHypotheses)
-      val newProcessedTracks = processedTracks.filter( _.end >= predecessors.head.end) :+ thisTrackProcessed
+      val filteredProcessedTracks = processedTracks.filter( _.end >= predecessors.head.end)
 
       // if we are heading towards the end of the list of unprocessed track, start to
-      // keep the finisehd ones as candidates to be the last ones
-      val newFinalCandidates =
-        if (todoTracks.size <= edgeCandidatesCount) finalCandidates + thisTrackProcessed
-        else finalCandidates
+      // keep the finished ones as candidates to be the last ones
+      val newLastTracks =
+        if (lastTracks.size >= edgeCandidatesCount && passOnHypotheses.nonEmpty)
+          lastTracks.drop(lastTracks.size - edgeCandidatesCount) :+ thisTrackProcessed
+        else if (passOnHypotheses.nonEmpty) lastTracks :+ thisTrackProcessed
+        else lastTracks
 
-      iterateTrackSelection(newProcessedTracks, todoTracks.drop(1), count + 1, newFinalCandidates)
+      // if the track does not contribute with any new hypotheses, don't add it into the completed
+      if (passOnHypotheses.isEmpty) iterateTrackSelection(filteredProcessedTracks, todoTracks.drop(1), count, newLastTracks)
+      else iterateTrackSelection(filteredProcessedTracks :+ thisTrackProcessed,
+                                  todoTracks.drop(1), count + 1, newLastTracks)
     }
   }
 
-  private def bytelog(p: Double) = log(p) / log(1.0001) / 1024
+  private def bytelog(p: Double): Double = log(p) / log(1.0001) / 1024
+
+  private def normalizeHypothesesDist[T <: Iterable[Hypothesis]](hypotheses: T): Seq[Hypothesis] = {
+    // summation of list of very small numbers
+    def saveSum(doubles: List[Double]): Double = {
+      def saveSum0(doubles: List[Double], acc: List[Double]): Double = {
+        doubles match {
+          case Nil => acc match { case Nil => 0.0
+                                  case List(sum) => sum
+                                  case _ => saveSum0(acc, Nil)}
+          case n1 :: n2 :: rest => saveSum0(rest, (n1 + n2) :: acc)
+          case List(num) => saveSum0(Nil, num :: acc)
+        }
+      }
+      saveSum0(doubles, Nil)
+    }
+
+    val sum = saveSum(hypotheses.map( h => pow(1.0001, 1024 * h.score )).toList)
+    val bytelogSum = bytelog(sum)
+    hypotheses.map(_.subtractScore(bytelogSum)).toSeq
+  }
 
   /**
    * Converts the track from partial tracking to track for the searching algorithm
@@ -83,6 +109,6 @@ object TrackSelection {
    */
   def convertTrackToSearchTracks(tracks: Set[Track], spectrumRate: Double): Seq[SearchTrack] =
     (for (track <- tracks.toSeq)
-      yield new SearchTrack(track.frequencies, track.start / spectrumRate, track.end / spectrumRate)).
+      yield new SearchTrack(track.frequencies, (track.start + 0.0) / spectrumRate, (track.end  + 0.0) / spectrumRate)).
     sortBy(_.start)
 }

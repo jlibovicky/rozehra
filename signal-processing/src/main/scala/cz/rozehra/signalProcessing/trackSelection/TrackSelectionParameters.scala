@@ -11,8 +11,8 @@ object TrackSelectionParameters {
   val lmFormat = LMFormat.Round1Rat
   val languageModel : LanguageModel = new SRILMWrapper("c:\\cygwin\\srilm\\bin\\Release\\ngram.exe",
       "C:\\MFF\\rozehra\\all-rat1.lm.gz", lmFormat)
-  val previousTracksToFollow = 5
-  val nBestSize = 7
-  val edgeCandidatesCount = 5
+  val previousTracksToFollow = 6
+  val nBestSize = 12
+  val edgeCandidatesCount = 6
 
 }

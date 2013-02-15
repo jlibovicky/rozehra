@@ -24,7 +24,7 @@ class Hypothesis(val notes: Seq[Note], val score: Double) {
       }
 
       val modifiedNote = if (pauseDuration > 0 && pauseDuration < 0.03) note.shiftStart(previousNote.end)
-      else note
+                         else note
 
       builder ++= (previousNote.pitch - note.pitch).toString
       builder ++= ";"
@@ -65,4 +65,5 @@ class Hypothesis(val notes: Seq[Note], val score: Double) {
 
   override def toString = notes.mkString(" ")
 
+  def subtractScore(subtraction: Double) = new Hypothesis(notes, score - subtraction)
 }
