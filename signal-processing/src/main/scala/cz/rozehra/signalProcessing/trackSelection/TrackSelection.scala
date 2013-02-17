@@ -14,7 +14,7 @@ object TrackSelection {
 
   def run(tracks: Seq[SearchTrack]): Seq[Hypothesis] = {
     val allHypoheses = iterateTrackSelection(Seq.empty, tracks, 0, Seq.empty).map(_.hypotheses).flatten.
-      groupBy(_.toString).map(_._2.maxBy(_.score))
+      groupBy(_.toString).map(_._2.maxBy(_.actualScore))
 
     languageModel.rescoreNBest(allHypoheses).take(min(allHypoheses.size, 2 * nBestSize))
   }
@@ -38,13 +38,14 @@ object TrackSelection {
           if (hypothesis.notes.last.end <= note.start) hypothesis.notes :+ note
           else hypothesis.notes.dropRight(1) :+ hypothesis.notes.last.shiftStart(note.start) :+ note
         // new hypothesis with cumulative score
-        newHypotheses += new Hypothesis(noteSeq, hypothesis.score + bytelog(noteScore))
+        newHypotheses += new Hypothesis(noteSeq, hypothesis.actualScore + bytelog(noteScore))
       }
 
       print("   >>> continuation hypotheses: " + newHypotheses.size + ", ")
 
       // there may the same hypothesis created different way ... tak those with maximum score
-      val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.toString).map( _._2.maxBy(_.score) ))
+      val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.toString).
+        map( _._2.maxBy(_.normScore) ))
 
       print(uniqueHypotheses.size + " of them unique")
 
@@ -55,7 +56,7 @@ object TrackSelection {
       val passOnHypotheses = normalizeHypothesesDist[Seq[Hypothesis]](
         if (count < edgeCandidatesCount) {
           val beginnings = thisTrack.notePossibilities.map(
-            n => new Hypothesis(Seq(n._1), bytelog(n._2))).sortBy(_.score)
+            n => new Hypothesis(Seq(n._1), bytelog(n._2))).sortBy(_.scorePerNote)
           beginnings.take(min(beginnings.size, 2 * nBestSize)) ++ newNBest
         }
         else newNBest)
@@ -96,9 +97,9 @@ object TrackSelection {
       saveSum0(doubles, Nil)
     }
 
-    val sum = saveSum(hypotheses.map( h => pow(1.0001, 1024 * h.score )).toList)
+    val sum = saveSum(hypotheses.map( h => pow(1.0001, 1024 * h.scorePerNote )).toList)
     val bytelogSum = bytelog(sum)
-    hypotheses.map(_.subtractScore(bytelogSum)).toSeq
+    hypotheses.map(_.setNormConstant(bytelogSum)).toSeq
   }
 
   /**

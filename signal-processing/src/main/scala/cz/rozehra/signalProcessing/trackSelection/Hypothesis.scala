@@ -5,7 +5,11 @@ import math._
 import cz.rozehra.signalProcessing.languageModeling.LMFormat
 import cz.rozehra.signalProcessing.languageModeling.LMFormat.LMFormat
 
-class Hypothesis(val notes: Seq[Note], val score: Double) {
+class Hypothesis private (val notes: Seq[Note], val actualScore: Double, val normConstant: Double) {
+  def this(notes: Seq[Note], actualScore: Double) = this(notes, actualScore, 0)
+  val scorePerNote = actualScore / notes.size
+  val normScore = scorePerNote - normConstant
+
   def SRILMString(format: LMFormat): String = {
     val builder = new StringBuilder
 
@@ -61,9 +65,9 @@ class Hypothesis(val notes: Seq[Note], val score: Double) {
     else null
   }
 
-  def addNote(note: Note, noteScore: Double): Hypothesis = new Hypothesis(notes :+ note, score + noteScore)
+  def addNote(note: Note, noteScore: Double): Hypothesis = new Hypothesis(notes :+ note, actualScore + noteScore)
 
   override def toString = notes.mkString(" ")
 
-  def subtractScore(subtraction: Double) = new Hypothesis(notes, score - subtraction)
+  def setNormConstant(normConst: Double) = new Hypothesis(notes, actualScore, normConst)
 }

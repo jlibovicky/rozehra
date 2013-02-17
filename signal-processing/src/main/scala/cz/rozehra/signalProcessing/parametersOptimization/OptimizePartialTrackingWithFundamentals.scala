@@ -7,12 +7,11 @@ import cz.rozehra.signalProcessing.partialtracking.Track
 import scala.io.Source
 import scala.math._
 
-object OptimizePartialTrackingWithFundamentals {
+object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
   val toneTolerances: Seq[Double] = Seq(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
   val maximumWithoutUpdateValues: Seq[Int] = Seq(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
   val minimumTrackDensities: Seq[Double] = Seq(0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
   val minimumTrackDurations: Seq[Int] = Seq(1, 2, 3, 4, 5, 6, 7)
-
 
   def main(args: Array[String]) {
     val testDirectory = new File(args(0))
@@ -21,7 +20,7 @@ object OptimizePartialTrackingWithFundamentals {
                                      //  list of sets of fundamentals <|> correct solutions
     var listsOfFundamentals = Seq.empty[(List[Seq[(Frequency, Double)]], Seq[Double])]
     var samplingRate = 0.0
-    for (file <- files.take(1)) {
+    for (file <- files) {
       System.err.print("File " + file.getName + " ... ")
       val solution = loadCorrectSolution(file)
 
@@ -75,51 +74,6 @@ object OptimizePartialTrackingWithFundamentals {
     }
   }
 
-  protected def loadCorrectSolution(waveFile: File): Seq[Double] = {
-    val solutionFile = Source.fromFile(waveFile.getAbsolutePath.replaceFirst("\\.wav", "REF.txt"))
-    var frequencies = Seq.empty[Double]
-    for (line <- solutionFile.getLines()) {
-       val frequency: String = line.split('\t')(1)
-       frequencies :+= frequency.toDouble
-    }
-    frequencies
-  }
-
-  protected def evaluateTracks(tracks: Set[Track], solution: Seq[Double], samplingRate: Double):
-  (Double, Double, Double, Double) = {
-    var containsCorrectTrack = 0.0
-    var containsCorrectOctave = 0.0
-
-    var totalFrequencyRecall = 0.0
-    var totalToneRecall = 0.0
-
-    for ( (frequency, time) <- solution zip (0 to solution.size).map(_ * 0.01) ) {
-      val timeIndex = time * samplingRate
-      val trackOnTime = tracks.filter( t => t.start <= timeIndex && t.end >= timeIndex)
-
-      if ((frequency == 0) || // silent place
-        (trackOnTime.exists( t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) < 0.25 )))
-        containsCorrectTrack += 1.0
-
-      if ((frequency == 0) || // silent place
-        (trackOnTime.exists( t => abs(toneFromFreq(t.averageFrequency) % 12.0 - toneFromFreq(frequency) % 12.0)  < 0.25 )))
-        containsCorrectOctave += 1.0
-
-      if ((frequency == 0) && trackOnTime.isEmpty) { totalFrequencyRecall += 1.0; totalToneRecall += 1.0 }
-      else if (!trackOnTime.isEmpty) {
-        totalFrequencyRecall += trackOnTime.filter(
-          t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) < 0.25 ).size /
-          trackOnTime.size.asInstanceOf[Double]
-        totalToneRecall += trackOnTime.filter(
-          t => abs(toneFromFreq(t.averageFrequency) % 12.0 - toneFromFreq(frequency) % 12.0)  < 0.25).size /
-          trackOnTime.size.asInstanceOf[Double]
-      }
-
-    }
-    (containsCorrectTrack / solution.size, containsCorrectOctave / solution.size,
-      totalFrequencyRecall / solution.size, totalToneRecall / solution.size)
-  }
-
   protected def evaluateSalienceFunction(fundamentals: List[Seq[(Frequency, Double)]], solution: Seq[Double],
                                         samplingRate: Double): (Double, Double)  = {
     val funds: IndexedSeq[Seq[(Frequency, Double)]] = fundamentals.toIndexedSeq
@@ -140,6 +94,4 @@ object OptimizePartialTrackingWithFundamentals {
     }
     (rightFrequencyDetected / solution.size, rightToneDetected / solution.size)
   }
-
-  protected def toneFromFreq(frequency: Double): Double = 69.0 + 12 * log(frequency / 440.0) / log(2.0)
 }
