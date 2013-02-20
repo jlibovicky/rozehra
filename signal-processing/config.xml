@@ -1,0 +1,27 @@
+<configuration>
+    <languageModeling>
+        <pathToNgram>c:\cygwin\srilm\bin\Release\ngram.exe</pathToNgram>
+        <pathToLM>C:\MFF\rozehra\all-rat1.lm.gz</pathToLM>
+        <LMFormat>rat1</LMFormat>
+    </languageModeling>
+
+    <peakDetection>
+        <delta>0.172</delta>
+    </peakDetection>
+
+    <partialTracking>
+        <peaks>
+            <toneTolerance>0.6</toneTolerance>
+            <maximumWithoutUpdate>4</maximumWithoutUpdate>
+            <minimumTrackDensity>0.4</minimumTrackDensity>
+            <minimumTrackDuration>3</minimumTrackDuration>
+        </peaks>
+
+        <fundamentals>
+            <toneTolerance>0.6</toneTolerance>
+            <maximumWithoutUpdate>4</maximumWithoutUpdate>
+            <minimumTrackDensity>0.4</minimumTrackDensity>
+            <minimumTrackDuration>3</minimumTrackDuration>
+        </fundamentals>
+    </partialTracking>
+</configuration>

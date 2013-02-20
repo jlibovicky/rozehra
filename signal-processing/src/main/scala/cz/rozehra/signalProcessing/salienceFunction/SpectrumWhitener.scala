@@ -18,8 +18,9 @@ class SpectrumWhitener(val spectrum: Spectrum[Signal]) {
     else 0.0
   }
 
-  val sigma = (1 to 30).map( (b) => sqrt((0 until spectrum.amplitudes.size).foldLeft(0.0)( (sum, k) =>
-    sum + H(b, k) * spectrum.amplitudes(k) * spectrum.amplitudes(k))))
+  val sigma = (1 to 30).map( (b) => sqrt( 1.0 / spectrum.amplitudes.size *
+    (0 until spectrum.amplitudes.size).foldLeft(0.0)( (sum, k) =>
+      sum + H(b, k) * spectrum.amplitudes(k) * spectrum.amplitudes(k))))
 
   val gammaB = (0 until 30).map( (b) => pow(sigma(b), nu))
 
@@ -28,7 +29,7 @@ class SpectrumWhitener(val spectrum: Spectrum[Signal]) {
 
     val b_k = min(max(1.0, 21.4 * log10(f_k / 229 + 1) - 1), 30.0)
     val b_1 = if (b_k > 0.0) floor(b_k).asInstanceOf[Int] else 0
-    val b_2 = if (b_k > 0.0)ceil(b_k).asInstanceOf[Int] else 0
+    val b_2 = if (b_k > 0.0) ceil(b_k).asInstanceOf[Int] else 0
 
     if (b_1 == b_2) gammaB(b_1 -1 )
     else gammaB(b_1 - 1) + (b_k - b_1) / (b_2 - b_1) * (gammaB(b_2 - 1)  - gammaB(b_1 - 1))

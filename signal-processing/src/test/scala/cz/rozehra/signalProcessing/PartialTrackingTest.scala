@@ -8,7 +8,7 @@ import collection.JavaConversions
 
 
 class PartialTrackingTest extends FunSuite {
-  /*test("partial tracking with fundamentals detection") {
+  test("partial tracking with fundamentals detection") {
     val readFileStart = System.currentTimeMillis
     //val wave = new WaveFileReader(resource);
     val wave = new WaveFileReader("C:\\MFF\\rozehra\\mirex05TrainFiles\\train01.wav")
@@ -30,7 +30,7 @@ class PartialTrackingTest extends FunSuite {
     visualizer2.drawSpectrum(spectrogram)
 
     val fundamentalsStart = System.currentTimeMillis
-    val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram)
+    val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
     val fundamentalsEnd = System.currentTimeMillis
     println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
 
@@ -42,12 +42,12 @@ class PartialTrackingTest extends FunSuite {
     visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))))
     visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq))
     readLine()
-  } */
+  }
 
-  test("partial tracking with simple peaks") {
+  /*test("partial tracking with simple peaks") {
     val readFileStart = System.currentTimeMillis
     //val wave = new WaveFileReader(resource);
-    val wave = new WaveFileReader("C:\\MFF\\rozehra\\mirex05TrainFiles\\train01.wav")
+    val wave = new WaveFileReader("C:\\MFF\\rozehra\\mirex05TrainFiles\\train05.wav")
     val readFileEnd = System.currentTimeMillis
     println("Reading file: " + (readFileEnd - readFileStart) / 1000.0 + " s")
 
@@ -61,17 +61,17 @@ class PartialTrackingTest extends FunSuite {
     visualizer2.drawSpectrum(spectrogram)
 
     val fundamentalsStart = System.currentTimeMillis
-    val detectedPeaks = extendedSpectrogram.spectra.map( _.findPeaks(0.3).toSeq)
+    val detectedPeaks = extendedSpectrogram.spectra.map( _.findPeaks(0.1).toSeq)
     val fundamentalsEnd = System.currentTimeMillis
     println("Peaks detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
+
+    visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedPeaks.map(_.map(_._1.asInstanceOf[java.lang.Double])))))
 
     val tracks = PartialTrackingForFundamentals.partialTracking(detectedPeaks)
     val trackingEnd = System.currentTimeMillis
     println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
     //tracks.foreach( t => println(t) )
-
-    visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedPeaks.map(_.map(_._1.asInstanceOf[java.lang.Double])))))
     visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq))
     readLine()
-  }
+  }*/
 }

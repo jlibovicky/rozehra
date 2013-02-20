@@ -17,7 +17,7 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
     val testDirectory = new File(args(0))
     val files = testDirectory.listFiles().filter( _.getName.endsWith(".wav"))
 
-                                     //  list of sets of fundamentals <|> correct solutions
+                                     //  list of sets of peaks <|> correct solutions
     var listsOfFundamentals = Seq.empty[(List[Seq[(Frequency, Double)]], Seq[Double])]
     var samplingRate = 0.0
     for (file <- files) {
@@ -28,19 +28,21 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
       val spectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
       samplingRate = spectrogram.spectrumRate
       val whitenedSpectrogram = Whitening.whitenSpectrogram(spectrogram)
-      val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram)
+      val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
       listsOfFundamentals :+= (detectedFundamentals, solution)
       System.err.println("loaded")
     }
     val preprocessedFiles = listsOfFundamentals.par
 
     println("EVALUATION OF FUNDAMENTALS DETECTION")
-    val (pitchSum, noteSum) = (for ( (fundamentals, solution) <- preprocessedFiles )
+    val (pitchSum, noteSum, vPitchSum, vNoteSum) = (for ( (fundamentals, solution) <- preprocessedFiles )
       yield evaluateSalienceFunction(fundamentals, solution, samplingRate)).
-        foldLeft((0.0, 0.0))( (sums, res) => (sums._1 + res._1, sums._2 + res._2))
-    println("frequency based accuracy = " + pitchSum / preprocessedFiles.size)
-    println("note based accuracy = " + noteSum / preprocessedFiles.size)
-
+        foldLeft((0.0, 0.0, 0.0, 0.0))( (sums, res) =>
+          (sums._1 + res._1, sums._2 + res._2, sums._3 + res._3, sums._4 + res._4))
+    println("frequency based recall = " + pitchSum / preprocessedFiles.size)
+    println("note based recall = " + noteSum / preprocessedFiles.size)
+    println("voiced segments frequency recall = " + vPitchSum / preprocessedFiles.size )
+    println("voiced segments tone recall = " + vNoteSum / preprocessedFiles.size)
 
     println()
     println("PARTIAL TRACKING OPTIMIZATION")
@@ -60,38 +62,52 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
       val scoreSum = scores.foldLeft((0.0, 0.0, 0.0, 0.0))((s, v) =>
         (s._1 + v._1, s._2 + v._2, s._3 + v._3, s._4 + v._4) )
 
-      val pitchScore = scoreSum._1 / preprocessedFiles.size
-      val noteScore = scoreSum._2 / preprocessedFiles.size
+      val pitchRecall = scoreSum._1 / preprocessedFiles.size
+      val noteRecall = scoreSum._2 / preprocessedFiles.size
 
-      val pitchRecall = scoreSum._3 / preprocessedFiles.size
-      val noteRecall = scoreSum._4 / preprocessedFiles.size
+      val pitchPrecision = scoreSum._3 / preprocessedFiles.size
+      val notePrecision = scoreSum._4 / preprocessedFiles.size
 
-      val pitchFMeasure = 2 * pitchScore * pitchRecall / (pitchScore + pitchRecall)
-      val noteFMeasure = 2 * noteScore * noteRecall / (noteScore + noteRecall)
+      val pitchFMeasure = 2 * pitchRecall * pitchPrecision / (pitchRecall + pitchPrecision)
+      val noteFMeasure = 2 * noteRecall * notePrecision / (noteRecall + notePrecision)
 
-      println(pitchScore + "," + noteScore + "," + pitchRecall + "," + noteRecall + "," +
+      println(pitchRecall + "," + noteRecall + "," + pitchPrecision + "," + notePrecision + "," +
         pitchFMeasure + "," + noteFMeasure)
     }
   }
 
   protected def evaluateSalienceFunction(fundamentals: List[Seq[(Frequency, Double)]], solution: Seq[Double],
-                                        samplingRate: Double): (Double, Double)  = {
+                                        samplingRate: Double): (Double, Double, Double, Double)  = {
     val funds: IndexedSeq[Seq[(Frequency, Double)]] = fundamentals.toIndexedSeq
 
     var rightFrequencyDetected = 0.0
+    var rightFrequenceVoicedDetected = 0.0
+
     var rightToneDetected = 0.0
+    var rightToneVoicedDtectecd = 0.0
+
+    var silentSegments = 0.0
 
     for ( (frequency, time) <- solution zip (0 to solution.size).map(_ * 0.01) ) {
       val timeIndex = min(floor(time * samplingRate).asInstanceOf[Int], funds.size - 1)
 
-      if ((frequency == 0.0) ||
-        funds(timeIndex).exists( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) < 0.25))
-        rightFrequencyDetected += 1.0
+      if (frequency == 0.0) {
+        rightFrequencyDetected += 1
+        rightToneDetected += 1
+        silentSegments += 1
+      }
 
-      if ((frequency == 0.0) ||
-        funds(timeIndex).exists( f => abs(toneFromFreq(f._1) % 12 - toneFromFreq(frequency) % 12) < 0.25))
+      if (funds(timeIndex).exists( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) < 0.25)) {
+        rightFrequencyDetected += 1.0
+        rightFrequenceVoicedDetected += 1.0
+      }
+
+      if (funds(timeIndex).exists( f => abs(toneFromFreq(f._1) % 12 - toneFromFreq(frequency) % 12) < 0.25)) {
         rightToneDetected += 1.0
+        rightToneVoicedDtectecd += 1.0
+      }
     }
-    (rightFrequencyDetected / solution.size, rightToneDetected / solution.size)
+    (rightFrequencyDetected / solution.size, rightToneDetected / solution.size,
+      rightFrequenceVoicedDetected / (solution.size - silentSegments), rightToneVoicedDtectecd / (solution.size - silentSegments))
   }
 }

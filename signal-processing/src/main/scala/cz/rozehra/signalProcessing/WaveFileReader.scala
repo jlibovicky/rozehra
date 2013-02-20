@@ -69,7 +69,7 @@ class WaveFileReader(val input: InputStream) {
   while (readFourChars != "data") { val dummy = false }
   val dataLength = readFourBytesUInt32 
 
-  def readData: List[Signal] = {
+  def readData: IndexedSeq[Signal] = {
     var accu: List[Signal] = Nil
     var alreadyReadCount = 0l
     try {
@@ -84,23 +84,24 @@ class WaveFileReader(val input: InputStream) {
         }
         accu ::= nextSample
       }
-      accu.reverse
+      accu.reverse.toIndexedSeq
     }
     catch {
-      case e: IOException => accu.reverse
+      case e: IOException => accu.reverse.toIndexedSeq
     } 
   }
   
-  val data: List[Signal] = readData
+  val data: IndexedSeq[Signal] = readData
   def getData: java.util.List[Signal] = ListBuffer(data: _*)
       
   stream.close
   
   def segmentToWindows(windowLenght: Int, windowShift: Int): WindowedTimeDomain[Signal] = {
-    val windows = (data.sliding(windowLenght, windowShift).toList ++ List(data.drop((data.size / windowShift) *
-      data.size))).map( s => new Window[Signal](samplingRate, windowShift, s.toIndexedSeq))
+    val windowsData = (data.sliding(windowLenght, windowShift).toSeq :+ data.takeRight(data.size - (data.size / windowShift) *
+      windowShift))
+    val windows = windowsData.map( s => new Window[Signal](samplingRate, windowShift, s.toIndexedSeq))
 
-    new WindowedTimeDomain(samplingRate, windowLenght, windowShift, windows)
+    new WindowedTimeDomain(samplingRate, windowLenght, windowShift, windows.toList)
   }
   
   override def toString: String = {

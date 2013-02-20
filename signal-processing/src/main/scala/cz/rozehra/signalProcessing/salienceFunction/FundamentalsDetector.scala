@@ -3,36 +3,36 @@ package cz.rozehra.signalProcessing.salienceFunction
 import scala.math._
 import cz.rozehra.signalProcessing._
 
-class FundamentalsDetector(val spectrum: Spectrum[Signal]) {
+class FundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRate: Double) {
   val alpha = 52.0 //27.0  // Hz
   val beta = 320.0 //320.0  // Hz
-  val minimumPeriod = spectrum.samplingRate / 4200.0  //  4.2 kHz  ... approx. the highest piano note
-  val maximumPeriod = spectrum.samplingRate / 1.0   // 20 Hz ... approx. the lowest piano tone
+  val minimumPeriod = samplingRate / 4200.0  //  4.2 kHz  ... approx. the highest piano note
+  val maximumPeriod = samplingRate / 20.0   // 20 Hz ... approx. the lowest piano tone
   val harmonicsCount = 10
   val deltaPeriod = 0.5 //
-  val periodPrecision = 1e-12 //0.5 // ??? compute how much are these in frequency and think about it
+  val periodPrecision = 1e-6 //0.5 // ??? compute how much are these in frequency and think about it
   val foundSoundSubtraction = 0.89 // 1.0
   val gammaForStopMeasure = 0.7
   val maximumFundamentalsInSpectrum = 10
 
   def gFunction(period: Double, m: Int) =
-    (spectrum.samplingRate / period + alpha) / (m * spectrum.samplingRate / period + beta)
+    (samplingRate / period + alpha) / (m * samplingRate / period + beta)
 
   def gForInterval(periodLow: Double, periodUp: Double, m: Int) =
-    (spectrum.samplingRate / periodLow + alpha) / (m * spectrum.samplingRate / periodUp + beta)
+    (samplingRate / periodLow + alpha) / (m * samplingRate / periodUp + beta)
 
   def kappaIndexes(period: Double, m: Int) = {
-    ((floor(m * spectrum.bandsCount / (period + deltaPeriod / 2)) - 1).asInstanceOf[Int] to
-          (ceil(m * spectrum.bandsCount / (period - deltaPeriod / 2)) - 1).asInstanceOf[Int])
-      .filter(_ < spectrum.bandsCount)
+    ((round(m * spectrum.bandsCount / (period + deltaPeriod / 2))).asInstanceOf[Int] to
+          (round(m * spectrum.bandsCount / (period - deltaPeriod / 2))).asInstanceOf[Int])
+      .filter(i => i > 0 && i < spectrum.bandsCount)
   }
 
   def kappaIndexesForInterval(periodLow: Double, periodUp: Double, m: Int) = {
     val period = (periodLow + periodUp) / 2
     val periodIntervalSize = periodUp - periodLow
 
-    ((floor(m * spectrum.bandsCount / (period + periodIntervalSize / 2)) - 1).asInstanceOf[Int] to
-      (ceil(m * spectrum.bandsCount / (period - periodIntervalSize / 2)) - 1).asInstanceOf[Int]).
+    ((round(m * spectrum.bandsCount / (period + periodIntervalSize / 2))).asInstanceOf[Int] to
+      (round(m * spectrum.bandsCount / (period - periodIntervalSize / 2))).asInstanceOf[Int]).
       filter( i => (i < spectrum.bandsCount) && (i > 0))
   }
 
@@ -64,9 +64,34 @@ class FundamentalsDetector(val spectrum: Spectrum[Signal]) {
   /**
    * Finds the period corresponding to fundamental frequency in the
    * @param amplitudes Sequence of amplitudes from a given spectrum
-   * @return Period
+   * @return Pair of period and salience funtion value
    */
-  def maximumSearch(amplitudes: IndexedSeq[Double]) = {
+  def maximumSearch(amplitudes: IndexedSeq[Double]): (Double, Double) = {
+    class QDescriptor (val tauLow: Double, val tauUp: Double) {
+      val sMax = salienceEstimate(tauLow, tauUp, amplitudes)
+      def tauAvg = (tauLow + tauUp) / 2
+      def tauDiff = tauUp - tauLow
+    }
+
+    var qBest = new QDescriptor(minimumPeriod, maximumPeriod)
+    val qDescriptors = collection.mutable.Set(qBest)
+
+    while (qBest.tauDiff > periodPrecision) {
+      val tauLow = qBest.tauLow
+      val tauUp = qBest.tauUp
+      val tauMiddle = (tauUp + tauLow) / 2
+
+      qDescriptors.remove(qBest)
+      qDescriptors.add(new QDescriptor(tauLow, tauMiddle))
+      qDescriptors.add(new QDescriptor(tauMiddle, tauUp))
+
+      qBest = qDescriptors.maxBy(_.sMax)
+    }
+
+    (qBest.tauAvg, salienceFunction(qBest.tauAvg))
+  }
+
+  /*def maximumSearch(amplitudes: IndexedSeq[Double]) = {
     def iterate(tauLow: Double, tauUp: Double): Double =
       if (tauUp - tauLow < periodPrecision) (tauUp + tauLow) / 2
       else {
@@ -79,7 +104,7 @@ class FundamentalsDetector(val spectrum: Spectrum[Signal]) {
     val period = iterate(minimumPeriod, maximumPeriod)
     val salience = salienceFunction(period)
     (period, salience)
-  }
+  }   */
 
   def findFundamentals = {
     def iterate(amplitudes: IndexedSeq[Double], stopMeasure: Double, acc: Seq[(Frequency, Double)]): Seq[(Frequency, Double)] = {
@@ -102,7 +127,7 @@ class FundamentalsDetector(val spectrum: Spectrum[Signal]) {
         val residualAmplitudes = for (i <- 0 until amplitudes.size)
           yield max(0, amplitudes(i) - foundSoundSubtraction * detectedSound(i))
 
-        iterate(residualAmplitudes, newStopMeasure, acc :+ (spectrum.samplingRate / newFundamentalPeriod._1, newFundamentalPeriod._2) )
+        iterate(residualAmplitudes, newStopMeasure, acc :+ (samplingRate / newFundamentalPeriod._1, newFundamentalPeriod._2) )
       }
     }
 

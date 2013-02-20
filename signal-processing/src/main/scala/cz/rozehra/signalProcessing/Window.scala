@@ -21,14 +21,14 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val s
     }
 
     def toZeroPaddedSpectrum: Spectrum[T] = {
-      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples ++ IndexedSeq.fill(samples.size)(0.0)))
+      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples) ++ IndexedSeq.fill(samples.size)(0.0))
       val bandWidth: Frequency = samplingRate / spectrum.length
       new Spectrum[T](2 * withShift, bandWidth, spectrum.asInstanceOf[IndexedSeq[T]])
     }
 
     def getEnergy: Energy = {
       if (!this.isInstanceOf[Window[Signal]]) { throw new Exception("Energy can be computed only from signal") }
-      samples.foldLeft(0.0)( (sum, sample) => sum + sample * sample ).asInstanceOf[Energy]
+      samples.foldLeft(0.0)( (sum, sample) => sum + sample * sample )
     }
       
     

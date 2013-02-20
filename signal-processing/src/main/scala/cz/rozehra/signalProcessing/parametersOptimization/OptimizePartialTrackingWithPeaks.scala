@@ -19,17 +19,17 @@ object OptimizePartialTrackingWithPeaks extends OptimizePartialTracking {
     val testDirectory = new File(args(0))
     val files = testDirectory.listFiles().filter( _.getName.endsWith(".wav"))
 
-    //  list of sets of fundamentals <|> correct solutions
+    //  list of sets of peaks <|> correct solutions
     var listsOfPeaks = Seq.empty[(List[Seq[(Frequency, Double)]], Seq[Double])]
     var samplingRate = 0.0
-    for (file <- files.take(1)) {
+    for (file <- files) {
       System.err.print("File " + file.getName + " ... ")
       val solution = loadCorrectSolution(file)
 
       val wave = new WaveFileReader(new FileInputStream(file))
-      val spectrogram = wave.segmentToWindows(4096, 2048).toSpectrogram
+      val spectrogram = wave.segmentToWindows(1024, 512).toSpectrogram
       samplingRate = spectrogram.spectrumRate
-      val detectedPeaks = spectrogram.spectra.map( _.findPeaks(0.3).toSeq )
+      val detectedPeaks = spectrogram.spectra.map( _.findPeaks(0.172).toSeq )
       listsOfPeaks :+= (detectedPeaks, solution)
       System.err.println("loaded")
     }
@@ -39,14 +39,13 @@ object OptimizePartialTrackingWithPeaks extends OptimizePartialTracking {
     val (pitchSum, noteSum) = (for ( (fundamentals, solution) <- preprocessedFiles )
     yield evaluatePeakDetection(fundamentals, solution, samplingRate)).
       foldLeft((0.0, 0.0))( (sums, res) => (sums._1 + res._1, sums._2 + res._2))
-    println("frequency based accuracy = " + pitchSum / preprocessedFiles.size)
-    println("note based accuracy = " + noteSum / preprocessedFiles.size)
+    println("frequency based recall = " + pitchSum / preprocessedFiles.size)
+    println("note based recall = " + noteSum / preprocessedFiles.size)
 
-    sys.exit()
     println()
     println("PARTIAL TRACKING OPTIMIZATION")
-    println("tone tolerance,maximum steps without update,minimum track density,minimum track duration,pitch precision," +
-      "note precision,pitch recall,note recall,pitch F-measure,note F-measure")
+    println("tone tolerance,maximum steps without update,minimum track density,minimum track duration,pitch recall," +
+      "note recall,pitch precision,note precision,pitch F2-measure,note F2-measure")
     for (toneTolerance <- toneTolerances;
          maximumWithoutUpdate <- maximumWithoutUpdateValues;
          minimumTrackDensity <- minimumTrackDensities;
@@ -61,16 +60,16 @@ object OptimizePartialTrackingWithPeaks extends OptimizePartialTracking {
       val scoreSum = scores.foldLeft((0.0, 0.0, 0.0, 0.0))((s, v) =>
         (s._1 + v._1, s._2 + v._2, s._3 + v._3, s._4 + v._4) )
 
-      val pitchScore = scoreSum._1 / preprocessedFiles.size
-      val noteScore = scoreSum._2 / preprocessedFiles.size
+      val pitchRecall = scoreSum._1 / preprocessedFiles.size
+      val noteRecall = scoreSum._2 / preprocessedFiles.size
 
-      val pitchRecall = scoreSum._3 / preprocessedFiles.size
-      val noteRecall = scoreSum._4 / preprocessedFiles.size
+      val pitchPrecision = scoreSum._3 / preprocessedFiles.size
+      val notePrecision = scoreSum._4 / preprocessedFiles.size
 
-      val pitchFMeasure = 2 * pitchScore * pitchRecall / (pitchScore + pitchRecall)
-      val noteFMeasure = 2 * noteScore * noteRecall / (noteScore + noteRecall)
+      val pitchFMeasure = 5 * pitchRecall * pitchPrecision / (pitchRecall + 4 * pitchPrecision)
+      val noteFMeasure = 5 * noteRecall * notePrecision / (noteRecall + 4 * notePrecision)
 
-      println(pitchScore + "," + noteScore + "," + pitchRecall + "," + noteRecall + "," +
+      println(pitchRecall + "," + noteRecall + "," + pitchPrecision + "," + notePrecision + "," +
         pitchFMeasure + "," + noteFMeasure)
     }
   }
