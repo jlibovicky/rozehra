@@ -1,8 +1,9 @@
 package cz.rozehra.signalProcessing
 
+import fundamentalsDetection.jojooyo.JoJooYoFundamentalsDetection
+import fundamentalsDetection.klapuri.{Whitening, KlapuriFundamentalDetection}
 import org.scalatest.FunSuite
 import java.io.InputStream
-import salienceFunction.{FundamentalDetection, Whitening}
 import visualization.Visualizer
 import collection.JavaConversions
 
@@ -30,7 +31,7 @@ class PartialTrackingTest extends FunSuite {
     visualizer2.drawSpectrum(spectrogram)
 
     val fundamentalsStart = System.currentTimeMillis
-    val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
+    val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
     val fundamentalsEnd = System.currentTimeMillis
     println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
 
@@ -39,10 +40,44 @@ class PartialTrackingTest extends FunSuite {
     println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
     //tracks.foreach( t => println(t) )
 
-    visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))))
-    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq))
+    visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))),
+      extendedSpectrogram.spectrumRate)
+    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq), extendedSpectrogram.spectrumRate)
     readLine()
   }
+
+  /*
+    test("partial tracking with fundamentals detection by Jo, Joo and Yo") {
+      val readFileStart = System.currentTimeMillis
+      val resource: InputStream = getClass().getClassLoader().getResourceAsStream("dMajorScaleRecorder.wav");
+      val wave = new WaveFileReader(resource);
+      //val wave = new WaveFileReader("C:\\MFF\\rozehra\\mirex05TrainFiles\\train01.wav")
+      val readFileEnd = System.currentTimeMillis
+      println("Reading file: " + (readFileEnd - readFileStart) / 1000.0 + " s")
+
+      val segmented = wave.segmentToWindows(1024, 512)
+      val spectrogram = segmented.toSpectrogram
+      val spectrogramComputed = System.currentTimeMillis
+      println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
+      //spectrogram.plot
+
+      val visualizer2 = new Visualizer()
+      visualizer2.drawSpectrum(spectrogram)
+
+      val fundamentalsStart = System.currentTimeMillis
+      val detectedFundamentals = JoJooYoFundamentalsDetection.detectFundamentals(spectrogram, wave.samplingRate)
+      val fundamentalsEnd = System.currentTimeMillis
+      println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
+
+      val tracks = PartialTrackingForFundamentals.partialTracking(detectedFundamentals)
+      val trackingEnd = System.currentTimeMillis
+      println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
+      //tracks.foreach( t => println(t) )
+
+      visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))))
+      visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq))
+      readLine()
+    }*/
 
   /*test("partial tracking with simple peaks") {
     val readFileStart = System.currentTimeMillis

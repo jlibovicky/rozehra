@@ -3,6 +3,7 @@ package cz.rozehra.signalProcessing.visualization;
 import cz.rozehra.signalProcessing.Spectrogram;
 import cz.rozehra.signalProcessing.partialtracking.Track;
 import cz.rozehra.signalProcessing.tempo.Tempo;
+import cz.rozehra.signalProcessing.trackSelection.Hypothesis;
 import scala.collection.Seq;
 
 import javax.swing.*;
@@ -95,11 +96,15 @@ public class Visualizer extends JFrame {
         drawer.addTempo(tempo);
     }
 
-    public void drawFundamentals(List<Seq<Double>> fundamentals) {
-        drawer.addFundamentalsCandidates(fundamentals);
+    public void drawFundamentals(List<Seq<Double>> fundamentals, double fundamentalsSamplingRate) {
+        drawer.addFundamentalsCandidates(fundamentals, fundamentalsSamplingRate);
     }
 
-    public void drawPartialTracks(List<Track> partialTracks) {
-        drawer.addPartialTracks(partialTracks);
+    public void drawPartialTracks(List<Track> partialTracks, double trackingSamplingRate) {
+        drawer.addPartialTracks(partialTracks, trackingSamplingRate);
+    }
+
+    public void drawHypothesis(Hypothesis hypothesis) {
+        drawer.addHypothesis(hypothesis);
     }
 }

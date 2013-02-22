@@ -2,10 +2,10 @@ package cz.rozehra.signalProcessing.parametersOptimization
 
 import java.io.{FileInputStream, File}
 import cz.rozehra.signalProcessing.{WaveFileReader, Frequency}
-import cz.rozehra.signalProcessing.salienceFunction.{FundamentalDetection, Whitening}
 import cz.rozehra.signalProcessing.partialtracking.Track
 import scala.io.Source
 import scala.math._
+import cz.rozehra.signalProcessing.fundamentalsDetection.klapuri.{Whitening, KlapuriFundamentalDetection}
 
 object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
   val toneTolerances: Seq[Double] = Seq(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
@@ -28,7 +28,7 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
       val spectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
       samplingRate = spectrogram.spectrumRate
       val whitenedSpectrogram = Whitening.whitenSpectrogram(spectrogram)
-      val detectedFundamentals = FundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
+      val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
       listsOfFundamentals :+= (detectedFundamentals, solution)
       System.err.println("loaded")
     }

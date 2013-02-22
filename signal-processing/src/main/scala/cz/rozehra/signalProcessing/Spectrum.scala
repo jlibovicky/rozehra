@@ -3,10 +3,15 @@ package cz.rozehra.signalProcessing
 import fft.FFT
 import scala.math._
 
+/**
+ *
+ * @param withWindowShift
+ * @param bandWidth Frequency range represented by one frequency bin
+ * @param amplitudes
+ * @tparam T
+ */
 class Spectrum[T <: Double](val withWindowShift: Int, val bandWidth: Frequency, val amplitudes: IndexedSeq[T]) {
   def maxFrequency = bandWidth * amplitudes.length
-  def magnitute[T : ClassManifest]: String = classManifest[T].erasure.getName
-
 
   val samplingRate = 2 * maxFrequency
   val duration: Time = withWindowShift / samplingRate
@@ -37,6 +42,13 @@ class Spectrum[T <: Double](val withWindowShift: Int, val bandWidth: Frequency, 
       }
     }
     peaks
+  }
+
+  def amplitudeAtFrequency(frequency: Frequency): Double = {
+    val bin = round(frequency / bandWidth).toInt
+
+    if (bin < amplitudes.size) amplitudes(bin)
+    else 0.0
   }
 
   def plot: Unit = {

@@ -100,4 +100,30 @@ object Filters {
 
     resultSignal.toIndexedSeq
   }
+
+  def findPeaks[T <: Double](delta: Double, values: IndexedSeq[T]): Set[(Int, Double)] = {
+    var peaks = Set.empty[(Int, Double)]
+
+    var minimum = (-1, Double.PositiveInfinity)
+    var maximum = (-1, Double.NegativeInfinity)
+
+    var lookForMax = true
+    for (i <- 0 until values.size) {
+      val value = values(i)
+
+      if (value > maximum._2) maximum = (i, value)
+      if (value < minimum._2) minimum = (i, value)
+
+      if (lookForMax && value < maximum._2 - delta) {
+        peaks += maximum
+        minimum = (i, value)
+        lookForMax = false
+      }
+      else if (value > minimum._2 + delta) {
+        maximum = (i, value)
+        lookForMax = true
+      }
+    }
+    peaks
+  }
 }

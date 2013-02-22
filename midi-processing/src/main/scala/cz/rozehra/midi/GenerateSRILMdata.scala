@@ -41,7 +41,18 @@ object GenerateSRILMdata {
 
           // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-          val ratio1TrainingFile = new BufferedWriter(new FileWriter(style + "-rat1.train"))
+          /*val ratioHalfTrainingFile = new BufferedWriter(new FileWriter(style + "-ratHalf.train"))
+          val ratioHalfTestFile = new BufferedWriter(new FileWriter(style + "-ratHalf.test"))
+
+          trainSet.map( m => ratioHalfTrainingFile.write(m.getLMNotation(LMFormat.RoundHalfRat)))
+          testSet.map( m => ratioHalfTestFile.write(m.getLMNotation(LMFormat.RoundHalfRat)))
+
+          ratioHalfTrainingFile.close()
+          ratioHalfTestFile.close()*/
+
+          // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+          /*val ratio1TrainingFile = new BufferedWriter(new FileWriter(style + "-rat1.train"))
           val ratio1TestFile = new BufferedWriter(new FileWriter(style + "-rat1.test"))
 
           trainSet.map( m => ratio1TrainingFile.write(m.getLMNotation(LMFormat.Round1Rat)) )
@@ -69,7 +80,7 @@ object GenerateSRILMdata {
           val log2ioTestFile = new BufferedWriter(new FileWriter(style + "-log2.test"))
 
           trainSet.map( m => log2TrainingFile.write(m.getLMNotation(LMFormat.Round2Log)) )
-          testSet.map( m => log2ioTestFile.write(m.getLMNotation(LMFormat.Round2Log)) )
+          testSet.map( m => log2ioTestFile.write(m.getLMNotation(LMFormat.Round2Log)) ) */
         }
       }
     }

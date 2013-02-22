@@ -18,10 +18,10 @@
         </peaks>
 
         <fundamentals>
-            <toneTolerance>0.6</toneTolerance>
+            <toneTolerance>0.5</toneTolerance>
             <maximumWithoutUpdate>4</maximumWithoutUpdate>
-            <minimumTrackDensity>0.4</minimumTrackDensity>
-            <minimumTrackDuration>3</minimumTrackDuration>
+            <minimumTrackDensity>0.6</minimumTrackDensity>
+            <minimumTrackDuration>2</minimumTrackDuration>
         </fundamentals>
     </partialTracking>
 </configuration>

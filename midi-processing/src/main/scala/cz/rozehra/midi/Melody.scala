@@ -1,84 +1,30 @@
 package cz.rozehra.midi
 
-import javax.sound.midi._
 import scala.math._
 import java.text.DecimalFormat
-import java.io.File
-
 
 class Melody (val notes: Array[Note]) extends Serializable {
   def this(notes: Seq[Note]) = this(notes.toArray)
   def durationInBeats = notes.last.end - notes.head.start
 
-  private val ticksPerBeat = 24
-  private lazy val midiSequence: Sequence = {
-    val sequence = new Sequence(Sequence.PPQ, ticksPerBeat)
-    val track = sequence.createTrack
-    val startPenalty = notes.head.start
+  def saveAsMidi(path: String) {
+    val midi = new MidiWriter
 
-    //****  General MIDI sysex -- turn on General MIDI sound set  ****
-    val b = Array[Byte](0xF0.asInstanceOf[Byte], 0x7E, 0x7F, 0x09, 0x01, 0xF7.asInstanceOf[Byte])
-    val sm = new SysexMessage()
-    sm.setMessage(b, 6)
-    track.add(new MidiEvent(sm, 0l))
+    var previousNote = notes.head
 
-    //****  set tempo (meta event)  ****
-    val mt = new MetaMessage()
-    val bt = Array[Byte](0x02, 0x00.asInstanceOf[Byte], 0x00)
-    mt.setMessage(0x51 ,bt, 3)
-    track.add(new MidiEvent(mt, 0l))
+    midi.noteOnOffNow((previousNote.durationInBeats * 16).toInt,
+      previousNote.pitch, 127)
+    for (note <- notes.drop(1)) {
+      var restTime = 0
+      if (previousNote.end < note.start) restTime = (16 * (note.start - previousNote.end)).toInt
 
-    //****  set track name (meta event)  ****
-    val mt2 = new MetaMessage()
-    val trackName = new String("melody")
-    mt2.setMessage(0x03, trackName.getBytes, trackName.length)
-    track.add(new MidiEvent(mt2, 0l))
+      midi.noteOn(restTime, note.pitch, 127)
+      midi.noteOff((16 * note.durationInBeats).toInt, note.pitch)
 
-    //****  set omni on  ****
-    val mm = new ShortMessage()
-    mm.setMessage(0xB0, 0x7D,0x00)
-    track.add(new MidiEvent(mm, 0l))
-
-    //****  set poly on  ****
-    val mm2 = new ShortMessage()
-    mm2.setMessage(0xB0, 0x7F,0x00)
-    track.add(new MidiEvent(mm2, 0l))
-
-    //****  set instrument to Piano  ****
-    val mm3 = new ShortMessage()
-    mm3.setMessage(0xC0, 0x00, 0x00)
-    track.add(new MidiEvent(mm3, 0l))
-
-
-    for (note <- notes) {
-      //****  note on
-      val noteOn = new ShortMessage()
-      noteOn.setMessage(0x90, note.pitch, 0x60)
-      track.add(new MidiEvent(noteOn, ((note.start - startPenalty) * ticksPerBeat).asInstanceOf[Long]))
-
-      //**** note off
-      val noteOff = new ShortMessage()
-      noteOff.setMessage(0x80, note.pitch ,0x40)
-      track.add(new MidiEvent(noteOff, ((note.end - startPenalty) * ticksPerBeat).asInstanceOf[Long] ))
+      previousNote = note
     }
 
-    //****  set end of track (meta event) 19 ticks later  ****
-    val mt3 = new MetaMessage()
-    mt3.setMessage(0x2F, Array.empty[Byte], 0)
-    track.add(new MidiEvent(mt, ((notes.last.end - startPenalty) * ticksPerBeat).asInstanceOf[Long]))
-
-    sequence
-  }
-
-  def play {
-    val sequencer = MidiSystem.getSequencer
-    sequencer.open()
-    sequencer.setSequence(midiSequence)
-    sequencer.start()
-  }
-
-  def saveAsMidi(path: String) {
-    MidiSystem.write(midiSequence, 1, new File(path))
+    midi.writeToFile(path)
   }
 
   import LMFormat._
@@ -87,22 +33,35 @@ class Melody (val notes: Array[Note]) extends Serializable {
   private val onePlace = new DecimalFormat("#.#")
   private val twoPlaces = new DecimalFormat("#.##")
 
-  private def formatTime(format: LMFormat, number: Double): String = {
+  private def formatTime(format: LMFormat, firstDuration: Double, secondDuration: Double): String = {
     def notNegativeZero(num: Double) = if (num == -0.0) 0.0 else num
     if (format == Round1Rat) {
-      onePlace.format(notNegativeZero(number))
+      if (secondDuration >= firstDuration) onePlace.format(notNegativeZero(secondDuration / firstDuration))
+      else "1/" + onePlace.format(notNegativeZero(firstDuration / secondDuration))
     }
     else if (format == Round0Rat) {
-      noPlace.format(notNegativeZero(number))
+      if (secondDuration >= firstDuration) noPlace.format(notNegativeZero(secondDuration / firstDuration))
+      else "1/" + noPlace.format(notNegativeZero(firstDuration / secondDuration))
     }
     else if (format == Round2Rat) {
-      twoPlaces.format(notNegativeZero(number))
+      if (secondDuration >= firstDuration) twoPlaces.format(notNegativeZero(secondDuration / firstDuration))
+      else "1/" + twoPlaces.format(notNegativeZero(firstDuration / secondDuration))
+    }
+    else if (format == RoundHalfRat) {
+      if (secondDuration >= firstDuration) {
+        val ratio = round(2 * secondDuration / firstDuration) / 2
+        onePlace.format(ratio)
+      }
+      else {
+        val ratio = round(2 * firstDuration / secondDuration) / 2
+        "1/" + onePlace.format(ratio)
+      }
     }
     else if (format == Round1Log) {
-      onePlace.format((notNegativeZero(log(number) / log(2))))
+      onePlace.format((notNegativeZero(log(secondDuration / firstDuration) / log(2))))
     }
     else if (format == Round2Log) {
-      twoPlaces.format((notNegativeZero(log(number) / log(2))))
+      twoPlaces.format((notNegativeZero(log(firstDuration) / log(2))))
     }
     else null
   }
@@ -118,7 +77,7 @@ class Melody (val notes: Array[Note]) extends Serializable {
 
       if (pauseDuration > 30) {
         builder ++= "pause;"
-        builder ++= formatTime(format, pauseDuration / previousNote.durationInMillis)
+        builder ++= formatTime(format, pauseDuration, previousNote.durationInMillis)
 
         builder ++= " "
         previousDuration = pauseDuration
@@ -130,12 +89,12 @@ class Melody (val notes: Array[Note]) extends Serializable {
       builder ++= (previousNote.pitch - note.pitch).toString
       builder ++= ";"
 
-      builder ++= formatTime(format, modifiedNote.durationInMillis / previousDuration)
+      builder ++= formatTime(format, modifiedNote.durationInMillis, previousDuration)
 
       builder ++= " "
       previousNote = note
     }
-
+    builder ++= "\n"
     builder.toString()
   }
 

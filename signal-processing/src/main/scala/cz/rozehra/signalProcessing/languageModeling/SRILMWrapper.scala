@@ -11,9 +11,11 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
 
   val pathToLogFile = "srilm-last.log"
   // start the server process
-  //private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-lm",
-  //  pathToModel, "-server-port", "19000").start
-  //serverProcess.getErrorStream.read // wait until the server is started
+  private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-lm",
+    pathToModel, "-server-port", "19000").start
+  serverProcess.getErrorStream.read // wait until the server is started
+  new errorReader(serverProcess.getErrorStream).start()
+  new errorReader(serverProcess.getInputStream).start()
 
   /**
    * Rescores the list of hypothesis and returns it in the new order.
@@ -23,7 +25,7 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
   def rescoreNBest(nBest: Iterable[Hypothesis]): Seq[Hypothesis] = {
     if (nBest.isEmpty) Seq.empty[Hypothesis]
     else {
-      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-use-server", "19000",
+      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "3", "-use-server", "19000",
         "-nbest", "-", "-no-eos").start()
       val ngramWriter = new BufferedWriter(new OutputStreamWriter(ngramProcess.getOutputStream))
 
@@ -69,7 +71,7 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
    */
   def mostLikelyNext(hypothesis: Hypothesis): Note = ???
 
-  //override def finalize() { serverProcess.destroy() }
+  override def finalize() { serverProcess.destroy() }
 
   private class errorReader(errOutputStream: InputStream) extends Thread {
     override def run() {

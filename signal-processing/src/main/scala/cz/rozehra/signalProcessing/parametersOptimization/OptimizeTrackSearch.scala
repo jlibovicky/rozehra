@@ -6,6 +6,7 @@ import java.io.File
 import io.Source
 import math._
 import scala.Predef._
+import cz.rozehra.signalProcessing.fundamentalsDetection.klapuri.{KlapuriFundamentalDetection, Whitening}
 
 object OptimizeTrackSearch extends OptimizeFrequenciesBase {
     def main(args: Array[String]) {
@@ -14,17 +15,27 @@ object OptimizeTrackSearch extends OptimizeFrequenciesBase {
       val readFileEnd = System.currentTimeMillis
       println("Reading file: " + (readFileEnd - readFileStart) / 1000.0 + " s")
 
-      val spectrogram = wave.segmentToWindows(1024, 512).toSpectrogram
+      val spectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
       val spectrogramComputed = System.currentTimeMillis
-      val extendedSpectrogram = spectrogram //wave.segmentToWindows(4096, 2048).toSpectrogram
       println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
 
-      val peaksStart = System.currentTimeMillis
+      val whitenedSpectrogram = Whitening.whitenSpectrogram(spectrogram)
+      val signalWhitened = System.currentTimeMillis
+      println("Signal whitening: " + (signalWhitened - spectrogramComputed) / 1000.0 + " s")
+      //whitenedSpectrogram.spectra(157).amplitudes.foreach(println)
+
+
+      val fundamentalsStart = System.currentTimeMillis
+      val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
+      val fundamentalsEnd = System.currentTimeMillis
+      println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
+
+      /*val peaksStart = System.currentTimeMillis
       val detectedPeaks = extendedSpectrogram.spectra.map( _.findPeaks(0.3).toSeq)
       val fundamentalsEnd = System.currentTimeMillis
-      println("Peaks detection: " + (fundamentalsEnd - peaksStart) / 1000.0 + " s")
+      println("Peaks detection: " + (fundamentalsEnd - peaksStart) / 1000.0 + " s")*/
 
-      val tracks = PartialTrackingForFundamentals.partialTracking(detectedPeaks)
+      val tracks = PartialTrackingForFundamentals.partialTracking(detectedFundamentals)
       val trackingEnd = System.currentTimeMillis
       println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
 
@@ -37,7 +48,7 @@ object OptimizeTrackSearch extends OptimizeFrequenciesBase {
       val score = evaluateHypothesis(result.head, solution)
 
       println()
-      println("Voicing Accuray: " + score._1)
+      println("Voicing Accuracy: " + score._1)
       println("Raw Pitch Accuracy: " + score._2)
       println("Raw Chroma Accuracy: " + score._3)
       println("Overall Accuracy: " + score._4)

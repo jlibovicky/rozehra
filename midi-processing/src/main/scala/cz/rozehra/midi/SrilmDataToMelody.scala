@@ -13,13 +13,18 @@ object SRILMDataToMelody {
     var lastPauseDuration = 0.0
     for (intervalString <- sentence.split(" ")) {
       if (intervalString.startsWith("pause")) {
-        val durationChange = intervalString.split(";")(1).toDouble
+        val durationChangeString = intervalString.split(";")(1)
+        val durationChange = if (durationChangeString.matches("^1/.*")) { 1 / durationChangeString.split("/")(1).toDouble }
+                             else durationChangeString.toDouble
+
         val durationMult = getDurationMult(durationChange, format)
         lastPauseDuration = previousNote.durationInBeats * durationMult
       }
       else {
         val pitchInterval = intervalString.split(";")(0).toInt
-        val durationChange = intervalString.split(";")(1).toDouble
+        val durationChangeString = intervalString.split(";")(1)
+        val durationChange = if (durationChangeString.matches("^1/.*")) { 1 / durationChangeString.split("/")(1).toDouble }
+                             else durationChangeString.toDouble
 
         // determine the real ratio between the previous note / pause duration and this note
         val durationMult = getDurationMult(durationChange, format)
@@ -49,7 +54,7 @@ object SRILMDataToMelody {
     var count = 0
 
     for( ln <- io.Source.stdin.getLines ) {
-      melodyFromSRILMSentence(ln, LMFormat.Round1Rat).saveAsMidi(name + count + ".mid")
+      melodyFromSRILMSentence(ln, LMFormat.Round0Rat).saveAsMidi(name + count + ".mid")
       count += 1
     }
   }

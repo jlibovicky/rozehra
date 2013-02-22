@@ -15,7 +15,7 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val s
         sumSequences[T](samples, that.samples)
         
     def toSpectrum: Spectrum[T] = {
-      val spectrum = FFT.powerSpectrum(FFT.hammingWindow(samples))
+      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples))
       val bandWidth: Frequency = samplingRate / 2 / spectrum.length 
       new Spectrum[T](withShift, bandWidth, spectrum)
     }

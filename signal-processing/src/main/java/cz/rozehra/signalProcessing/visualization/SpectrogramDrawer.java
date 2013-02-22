@@ -4,6 +4,8 @@ import cz.rozehra.signalProcessing.Spectrogram;
 import cz.rozehra.signalProcessing.Spectrum;
 import cz.rozehra.signalProcessing.partialtracking.Track;
 import cz.rozehra.signalProcessing.tempo.Tempo;
+import cz.rozehra.signalProcessing.trackSelection.Hypothesis;
+import cz.rozehra.signalProcessing.trackSelection.Note;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
@@ -16,8 +18,14 @@ class SpectrogramDrawer extends JPanel {
     private Spectrogram spectrogram;
     private List<Double> onsetTimes;
     private Tempo tempo;
+
     private List<Track> partialTracks;
+    private double partialTrackSamplingRate;
+
     private List<Seq<Double>> fundamentals;
+    private double fundamentalsSamplingRate;
+
+    private Hypothesis hypothesis;
 
     public SpectrogramDrawer() {
         setLayout(null);
@@ -37,12 +45,18 @@ class SpectrogramDrawer extends JPanel {
         this.tempo = tempo;
     }
 
-    public void addFundamentalsCandidates(List<Seq<Double>> fundamentals) {
+    public void addFundamentalsCandidates(List<Seq<Double>> fundamentals, double fundamentalsSamplingRate) {
         this.fundamentals = fundamentals;
+        this.fundamentalsSamplingRate = fundamentalsSamplingRate;
     }
 
-    public void addPartialTracks(List<Track> partialTracks) {
+    public void addPartialTracks(List<Track> partialTracks, double partialTrackSamplingRate) {
         this.partialTracks = partialTracks;
+        this.partialTrackSamplingRate = partialTrackSamplingRate;
+    }
+
+    public void addHypothesis(Hypothesis hypothesis) {
+        this.hypothesis = hypothesis;
     }
 
 
@@ -97,6 +111,7 @@ class SpectrogramDrawer extends JPanel {
         if (fundamentals != null) { paintFundamentals(g); }
         if (partialTracks != null) { paintTracks(g); }
         if (timeRectangle != -1) { paintTimeRectangle(g); }
+        if (hypothesis != null) { paintHypothesis(g); }
     }
 
     private void paintOnsets(Graphics g) {
@@ -108,7 +123,7 @@ class SpectrogramDrawer extends JPanel {
         }
     }
 
-    private  void paintTempo(Graphics g) {
+    private void paintTempo(Graphics g) {
         g.setColor(Color.LIGHT_GRAY);
 
         Graphics2D g2d = (Graphics2D) g;
@@ -136,10 +151,11 @@ class SpectrogramDrawer extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
 
         g2d.setColor(new Color(255, 0, 0));
+        double horizontalRatio = spectrogram.spectrumRate() / fundamentalsSamplingRate;
 
         int spectrumCount = 0;
         for (Seq<Double> candidates : fundamentals) {
-            int horizontalPos = Visualizer.horizontalScale * spectrumCount;
+            int horizontalPos = (int) (Visualizer.horizontalScale * spectrumCount * horizontalRatio);
             for (Double frequency : JavaConverters.asJavaIterableConverter(candidates).asJava()) {
                 g.drawRect(horizontalPos, spectrogram.bandsCount() -
                         (int)(frequency * spectrogram.bandsCount() / spectrogram.maxFrequency()), 1, 1);
@@ -151,11 +167,12 @@ class SpectrogramDrawer extends JPanel {
 
     private void paintTracks(Graphics g) {
         g.setColor(new Color(150, 0, 0));
+        double horizontalRatio = spectrogram.spectrumRate() / partialTrackSamplingRate;
 
         for(Track t: partialTracks) {
             int verticalPos =  spectrogram.bandsCount() - (int)(t.averageFrequency() * spectrogram.bandsCount() / spectrogram.maxFrequency());
-            g.drawRect(Visualizer.horizontalScale * t.start(),
-                    verticalPos - 1, Visualizer.horizontalScale * (t.end() - t.start()), 3);
+            g.drawRect((int) (Visualizer.horizontalScale * t.start() * horizontalRatio),
+                    verticalPos - 1, (int) (Visualizer.horizontalScale * horizontalRatio * (t.end() - t.start())), 3);
         }
     }
 
@@ -166,4 +183,17 @@ class SpectrogramDrawer extends JPanel {
                     Visualizer.horizontalScale + 1, spectrogram.bandsCount());
         }
     }
+
+    public void paintHypothesis(Graphics g) {
+        g.setColor(new Color(200, 100, 0));
+        for (int i = 0; i < hypothesis.notes().size(); i++) {
+            Note note = hypothesis.notes().apply(i);
+            int verticalPos =  spectrogram.bandsCount() - (int)(note.pitchAsFrequency() * spectrogram.bandsCount()
+                    / spectrogram.maxFrequency());
+            g.fillRect((int)(note.start() * spectrogram.spectrumRate()) - 1, verticalPos,
+                    (int)(note.duration() * spectrogram.spectrumRate()), 4);
+        }
+    }
+
+
 }

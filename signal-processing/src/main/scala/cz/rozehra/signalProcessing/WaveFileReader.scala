@@ -97,8 +97,11 @@ class WaveFileReader(val input: InputStream) {
   stream.close
   
   def segmentToWindows(windowLenght: Int, windowShift: Int): WindowedTimeDomain[Signal] = {
-    val windowsData = (data.sliding(windowLenght, windowShift).toSeq :+ data.takeRight(data.size - (data.size / windowShift) *
-      windowShift))
+    val windowsDataMain = data.sliding(windowLenght, windowShift).toSeq
+
+    val restSamplesOnRight = data.size - (data.size / windowShift) * windowShift
+    val windowsData = if (restSamplesOnRight > 0) windowsDataMain :+ data.takeRight(restSamplesOnRight)
+                      else windowsDataMain
     val windows = windowsData.map( s => new Window[Signal](samplingRate, windowShift, s.toIndexedSeq))
 
     new WindowedTimeDomain(samplingRate, windowLenght, windowShift, windows.toList)

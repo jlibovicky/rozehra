@@ -2,7 +2,6 @@ package cz.rozehra.signalProcessing.parametersOptimization
 
 import java.io.{FileInputStream, File}
 import cz.rozehra.signalProcessing.{WaveFileReader, Frequency}
-import cz.rozehra.signalProcessing.salienceFunction.{FundamentalDetection, Whitening}
 import cz.rozehra.signalProcessing.partialtracking.Track
 import scala.io.Source
 import scala.math._
