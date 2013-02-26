@@ -9,26 +9,15 @@ class TimeDomainWaveForm[T <: Double] (val samplingRate: Frequency , val samples
     Plotting.xlabel("Time in seconds")*/
   }
 
-  def segmentToWindows(windowLenght: Int, windowShift: Int): WindowedTimeDomain[T] = {
-    def segmentToWindows0(restOfData: IndexedSeq[T], fromPrevious: IndexedSeq[T], accu: List[Window[T]]): List[Window[T]]  = {
-      if (fromPrevious.length == 0) {
-        val (fakePrevious, rest) = restOfData.splitAt(windowShift)
-        segmentToWindows0(rest, fakePrevious, Nil)
-      }
-      else if (restOfData.length == 0) accu.reverse
-      else if (restOfData.length < windowLenght)
-        (new Window[T](samplingRate, windowShift, restOfData.toIndexedSeq) :: accu).reverse
-      else {
-        val (first, second) = restOfData.splitAt(windowLenght - windowShift)
-        segmentToWindows0(second,
-          first.take(windowShift),
-          new Window[T](samplingRate, windowShift,
-            (fromPrevious ++ first).toIndexedSeq) :: accu)
-      }
-    }
+  def segmentToWindows(windowLength: Int, windowShift: Int): WindowedTimeDomain[Signal] = {
+    val windowsDataMain = samples.sliding(windowLength, windowShift).toSeq
 
-    val windows = segmentToWindows0(samples, IndexedSeq.empty[T], Nil)
-    new WindowedTimeDomain(samplingRate, windowLenght, windowShift, windows)
+    val restSamplesOnRight = samples.size - (samples.size / windowShift) * windowShift
+    val windowsData = if (restSamplesOnRight > 0) windowsDataMain :+ samples.takeRight(restSamplesOnRight)
+    else windowsDataMain
+    val windows = windowsData.map( s => new Window[Signal](samplingRate, windowShift, s.toIndexedSeq, windowLength))
+
+    new WindowedTimeDomain(samplingRate, windowLength, windowShift, windows.toList)
   }
 
   def getEnergy(windowLength: Int, windowShift: Int): TimeDomainWaveForm[Energy] = {

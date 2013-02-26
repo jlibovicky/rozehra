@@ -10,15 +10,17 @@ object Filters {
       val RC = 1.0 / 2.0 / Pi / cutOffFreq
       val alpha = dt / (RC + dt)
 
-      val resultSignal = collection.mutable.IndexedSeq.fill[T](signal.size)(0.0.asInstanceOf[T])
+      var resultSignalRev = List(0.0.asInstanceOf[T])
+      var prevSignalSample = 0.0
 
-      resultSignal(0) = 0.0.asInstanceOf[T]
       for (i <- 1 until signal.size) {
         //y[i] := α * x[i] + (1-α) * y[i-1]
-        resultSignal(i) = (alpha * signal(i) + (1 - alpha) * resultSignal(i - 1)).asInstanceOf[T]
+        val valueToAdd = (alpha * signal(i) + (1 - alpha) * prevSignalSample).asInstanceOf[T]
+        resultSignalRev ::= valueToAdd
+        prevSignalSample = valueToAdd
       }
 
-      resultSignal.toIndexedSeq
+      resultSignalRev.reverse.toIndexedSeq
     }
   }
 
@@ -27,14 +29,17 @@ object Filters {
     val RC = 1.0 / 2.0 / Pi / cutOffFreq
     val alpha = dt / (RC + dt)
 
-    val resultSignal = collection.mutable.IndexedSeq.fill[T](signal.size)(0.0.asInstanceOf[T])
+    var resultSignalRev = List(0.0.asInstanceOf[T])
+    //var previousSample = signal.head
+    var previousResultSample = 0.0.asInstanceOf[T]
 
-    resultSignal(0) = 0.0.asInstanceOf[T]
     for (i <- 1 until signal.size) {
-      resultSignal(i) = (alpha * (resultSignal(i - 1) + signal(i) - signal(i - 1))).asInstanceOf[T]
+      val newValue = (alpha * (previousResultSample + signal(i) - signal(i - 1))).asInstanceOf[T]
+      resultSignalRev ::= newValue
+      previousResultSample = newValue
     }
 
-    resultSignal.toIndexedSeq
+    resultSignalRev.reverse.toIndexedSeq
   }
 
   def bandPassFilter[T <: Double](signal: IndexedSeq[T], samplingRate: Frequency, from: Frequency, to: Frequency) =

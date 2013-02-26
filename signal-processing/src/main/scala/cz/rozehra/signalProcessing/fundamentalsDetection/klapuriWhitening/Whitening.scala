@@ -1,4 +1,4 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.klapuri
+package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening
 
 import cz.rozehra.signalProcessing._
 

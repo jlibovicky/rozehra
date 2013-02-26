@@ -1,7 +1,7 @@
 package cz.rozehra.signalProcessing.trackSelection
 
 import cz.rozehra.signalProcessing.{PartialTrackingForFundamentals, WaveFileReader}
-import cz.rozehra.signalProcessing.fundamentalsDetection.klapuri.{KlapuriFundamentalDetection, Whitening}
+import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
 
 object Run {
  def main(args: Array[String]) {

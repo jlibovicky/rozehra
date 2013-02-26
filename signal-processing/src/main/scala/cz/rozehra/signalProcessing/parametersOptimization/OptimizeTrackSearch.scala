@@ -6,7 +6,7 @@ import java.io.File
 import io.Source
 import math._
 import scala.Predef._
-import cz.rozehra.signalProcessing.fundamentalsDetection.klapuri.{KlapuriFundamentalDetection, Whitening}
+import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
 
 object OptimizeTrackSearch extends OptimizeFrequenciesBase {
     def main(args: Array[String]) {

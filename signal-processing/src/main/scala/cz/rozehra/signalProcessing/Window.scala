@@ -4,7 +4,8 @@ import scala.collection.immutable.IndexedSeq
 import scala.math._
 import fft.{FFT}
 
-class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val samples: IndexedSeq[T]) {
+class Window[T <: Double](val samplingRate: Frequency, val withShift: Int,
+                          val samples: IndexedSeq[T], val maxFrameSize: Int) {
     def size = samples.length
     def magnitute[T : ClassManifest]: String = classManifest[T].erasure.getName
     
@@ -15,13 +16,13 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int, val s
         sumSequences[T](samples, that.samples)
         
     def toSpectrum: Spectrum[T] = {
-      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples))
+      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples), maxFrameSize)
       val bandWidth: Frequency = samplingRate / 2 / spectrum.length 
       new Spectrum[T](withShift, bandWidth, spectrum)
     }
 
     def toZeroPaddedSpectrum: Spectrum[T] = {
-      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples) ++ IndexedSeq.fill(samples.size)(0.0))
+      val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples), maxFrameSize * 2)
       val bandWidth: Frequency = samplingRate / spectrum.length
       new Spectrum[T](2 * withShift, bandWidth, spectrum.asInstanceOf[IndexedSeq[T]])
     }

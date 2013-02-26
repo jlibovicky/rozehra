@@ -1,6 +1,7 @@
 package cz.rozehra
 
 import scala.collection.immutable.IndexedSeq
+import org.apache.commons.math3.linear.RealMatrix
 
 package object signalProcessing {
   type Time = Double
@@ -17,4 +18,11 @@ package object signalProcessing {
             }
         sumSamples0(seq1, seq2, Nil)          
     }
+
+  def matrixToSpectra[T <: Double](matrix: RealMatrix, withWindowShift: Int, bandWidth: Frequency) = {
+    var spectraRev = List.empty[Spectrum[T]]
+    for (i <- 0 until matrix.getColumnDimension)
+      spectraRev ::= new Spectrum[T](withWindowShift, bandWidth, matrix.getColumn(i).map(_.asInstanceOf[T]).toIndexedSeq)
+    spectraRev.reverse
+  }
 }

@@ -5,7 +5,7 @@ import cz.rozehra.signalProcessing.{WaveFileReader, Frequency}
 import cz.rozehra.signalProcessing.partialtracking.Track
 import scala.io.Source
 import scala.math._
-import cz.rozehra.signalProcessing.fundamentalsDetection.klapuri.{Whitening, KlapuriFundamentalDetection}
+import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
 
 object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
   val toneTolerances: Seq[Double] = Seq(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
@@ -20,7 +20,7 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
                                      //  list of sets of peaks <|> correct solutions
     var listsOfFundamentals = Seq.empty[(List[Seq[(Frequency, Double)]], Seq[Double])]
     var samplingRate = 0.0
-    for (file <- files) {
+    for (file <- files.take(1)) {
       System.err.print("File " + file.getName + " ... ")
       val solution = loadCorrectSolution(file)
 
@@ -44,6 +44,7 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
     println("voiced segments frequency recall = " + vPitchSum / preprocessedFiles.size )
     println("voiced segments tone recall = " + vNoteSum / preprocessedFiles.size)
 
+    sys.exit()
     println()
     println("PARTIAL TRACKING OPTIMIZATION")
     println("tone tolerance,maximum steps without update,minimum track density,minimum track duration,pitch precision," +

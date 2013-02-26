@@ -1,7 +1,7 @@
 package cz.rozehra.signalProcessing
 
 import fundamentalsDetection.jojooyo.JoJooYoFundamentalsDetection
-import fundamentalsDetection.klapuri.{Whitening, KlapuriFundamentalDetection}
+import fundamentalsDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
 import org.scalatest.FunSuite
 import java.io.InputStream
 import visualization.Visualizer

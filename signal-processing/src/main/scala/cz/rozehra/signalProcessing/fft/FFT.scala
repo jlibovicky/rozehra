@@ -9,8 +9,8 @@ import org.apache.commons.math3.complex.Complex
 object FFT {
   private val transformer = new FastFourierTransformer(DftNormalization.STANDARD)
 
-  def powerSpectrum[T <: Double](input: IndexedSeq[T]) = {
-    val data = padder(input)
+  def powerSpectrum[T <: Double](input: IndexedSeq[T], frameSize: Int) = {
+    val data = input ++ IndexedSeq.fill(frameSize - input.size)(0.0)
     val outComplex = fft(data)
     outComplex.take((data.length / 2) + 1).par.map(n => (n.abs / sqrt(data.length)).asInstanceOf[T]).toIndexedSeq
   }

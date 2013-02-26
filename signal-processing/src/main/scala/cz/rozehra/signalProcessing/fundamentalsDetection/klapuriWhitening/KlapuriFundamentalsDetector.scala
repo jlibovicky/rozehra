@@ -1,4 +1,4 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.klapuri
+package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening
 
 import scala.math._
 import cz.rozehra.signalProcessing._
@@ -13,7 +13,7 @@ class KlapuriFundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRa
   val periodPrecision = 1e-6 //0.5 // ??? compute how much are these in frequency and think about it
   val foundSoundSubtraction = 0.89 // 1.0
   val gammaForStopMeasure = 0.7
-  val maximumFundamentalsInSpectrum = 10
+  val maximumFundamentalsInSpectrum = 4
 
   def gFunction(period: Double, m: Int) =
     (samplingRate / period + alpha) / (m * samplingRate / period + beta)
@@ -22,9 +22,11 @@ class KlapuriFundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRa
     (samplingRate / periodLow + alpha) / (m * samplingRate / periodUp + beta)
 
   def kappaIndexes(period: Double, m: Int) = {
-    ((floor(m * spectrum.bandsCount / (period + deltaPeriod / 2))).asInstanceOf[Int] to
-          (ceil(m * spectrum.bandsCount / (period - deltaPeriod / 2))).asInstanceOf[Int])
-      .filter(i => i > 0 && i < spectrum.bandsCount)
+    val lowerBound = floor(m * spectrum.bandsCount / (period + deltaPeriod / 2)).toInt
+    val upperBound = max(lowerBound, floor(m * spectrum.bandsCount / (period - deltaPeriod / 2)).toInt)
+
+    //println((lowerBound to upperBound))
+    (lowerBound to upperBound).filter(i => i > 0 && i < spectrum.bandsCount)
   }
 
   def kappaIndexesForInterval(periodLow: Double, periodUp: Double, m: Int) = {
@@ -131,6 +133,6 @@ class KlapuriFundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRa
       }
     }
 
-    iterate(spectrum.amplitudes, Double.MinValue, Seq.empty)
+    iterate(spectrum.amplitudes, Double.MinValue, Seq.empty).groupBy(_._1).map(_._2.maxBy(_._2)).toSeq
   }
 }

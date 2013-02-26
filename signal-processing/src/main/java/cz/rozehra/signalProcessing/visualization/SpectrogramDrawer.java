@@ -35,6 +35,7 @@ class SpectrogramDrawer extends JPanel {
         this.spectrogram = spectrogram;
         setPreferredSize(new Dimension(Visualizer.horizontalScale * spectrogram.spectra().size(),
                 spectrogram.bandsCount() + 30));
+
     }
 
     public void addOnsetTimes(List<Double> onsetTimes) {
@@ -63,7 +64,7 @@ class SpectrogramDrawer extends JPanel {
     public void paintComponent(Graphics g) {
         if(spectrogram == null) { return; }
 
-        int spectumCount = 0;
+        //int spectumCount = 0;
         java.util.List<Spectrum> spectra = scala.collection.JavaConversions.asJavaList(spectrogram.spectra().toSeq());
 
         double maximum = 0.0;
@@ -73,19 +74,24 @@ class SpectrogramDrawer extends JPanel {
             }
         }
 
-        for (Spectrum s: spectra) {
-            spectumCount++;
+        int startIndex = (int) (this.getVisibleRect().getX() / Visualizer.horizontalScale);
+        int endIndex = (int) ((this.getVisibleRect().getX() +
+                this.getVisibleRect().getWidth()) / Visualizer.horizontalScale);
+
+        for (int j = startIndex; j < endIndex; j++) {
+            Spectrum s = spectra.get(j);
+        //for (Spectrum s : spectra) {
             for(int i = 0; i < s.amplitudes().size(); i++) {
                 int colorIntensity = (int)Math.round(255.0 - (255.0 * (Double)(s.amplitudes().apply(i)) / maximum));
 
                 g.setColor(new Color(colorIntensity, colorIntensity, colorIntensity));
-                g.fillRect(Visualizer.horizontalScale * spectumCount, s.amplitudes().size() - i, 2, 1);
+                g.fillRect(Visualizer.horizontalScale * j, s.amplitudes().size() - i, 2, 1);
             }
         }
 
         // plot the time scale
         g.setColor(Color.BLACK);
-        int tenthOfSecondsCount = (int)Math.floor(10 * spectumCount / spectrogram.spectrumRate());
+        int tenthOfSecondsCount = (int)Math.floor(10 * spectra.size() / spectrogram.spectrumRate());
         for (int i = 0; i <= tenthOfSecondsCount; i++) {
             int horizontalPos = Visualizer.horizontalShift + i * Visualizer.horizontalScale * (int)(spectrogram.spectrumRate()) / 10;
             if (i % 10 == 0 ) {
@@ -104,7 +110,7 @@ class SpectrogramDrawer extends JPanel {
 
         }
 
-        setSize(new Dimension(Visualizer.horizontalShift + Visualizer.horizontalScale * spectumCount, spectrogram.bandsCount() + 30));
+        setSize(new Dimension(Visualizer.horizontalShift + Visualizer.horizontalScale * spectra.size(), spectrogram.bandsCount() + 30));
 
         if (onsetTimes != null) {  paintOnsets(g); }
         if (tempo != null) { paintTempo(g); }

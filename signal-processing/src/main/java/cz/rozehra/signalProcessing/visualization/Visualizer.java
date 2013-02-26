@@ -39,6 +39,7 @@ public class Visualizer extends JFrame {
         scrollPane = new JScrollPane(drawer);
         scrollPane.setPreferredSize(new Dimension(800, 565));
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         scrollPane.setLocation(40, 0);
         mainPanel.add(scrollPane);
 
