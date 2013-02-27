@@ -12,7 +12,7 @@ object FFT {
   def powerSpectrum[T <: Double](input: IndexedSeq[T], frameSize: Int) = {
     val data = input ++ IndexedSeq.fill(frameSize - input.size)(0.0)
     val outComplex = fft(data)
-    outComplex.take((data.length / 2) + 1).par.map(n => (n.abs / sqrt(data.length)).asInstanceOf[T]).toIndexedSeq
+    outComplex.take(data.length / 2).par.map(n => (n.abs / sqrt(data.length)).asInstanceOf[T]).toIndexedSeq
   }
 
   def hammingWindow[T <: Double](original: IndexedSeq[T]): immutable.IndexedSeq[T] = {
@@ -35,16 +35,9 @@ object FFT {
     newWindowVector.toIndexedSeq
   }
 
-  private def padder(data: Seq[Double]) : Seq[Double] = {
-    val closestPow2 = pow(2, ceil(log(data.size) / log(2.0))).asInstanceOf[Int]
-
-    if (data.size == closestPow2) data
-    else data ++ Seq.fill(closestPow2 - data.size)(0.0)
-  } 
-
-  def fft(f: Seq[Double]) : Seq[Complex] = {
+  def fft(f: IndexedSeq[Double]) : Array[Complex] = {
     require(isPowerOf2(f.size), "Input of FFT must have size of power of two.")
-    transformer.transform(f.toArray, TransformType.FORWARD).toSeq
+    transformer.transform(f.toArray, TransformType.FORWARD)
   }
 
   private def isPowerOf2(n: Int): Boolean =

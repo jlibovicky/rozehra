@@ -3,9 +3,11 @@ package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening
 import cz.rozehra.signalProcessing._
 
 object Whitening {
-  def whitenSpectrogram(spectrogram: Spectrogram[Signal]) = {
-    val newSpectra = spectrogram.spectra.par.map( spectrum => new SpectrumWhitener(spectrum).getWhitenedSpectrum ).toList
-    new Spectrogram[Signal](spectrogram.spectrumRate, newSpectra,
-      spectrogram.signalWindowSize, spectrogram.signalWindowShift)
+  def whitenSpectrogram(signal: TimeDomainWaveForm[Signal]) = {
+    val newSpectra = signal.segmentToWindows(4096, 2048).windows.
+      map(w => w.hanningWindow.changeMaxFrameSize(8192)).map(new FreqDomainWindow(_)).
+      map(fw => new SpectrumWhitener(fw).getWhitenedSpectrum)
+
+    new Spectrogram[Signal](1 / newSpectra.head.duration, newSpectra, 4096, 2048)
   }
 }

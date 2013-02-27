@@ -36,20 +36,22 @@ class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Sp
     val gnuplotProcess = new ProcessBuilder("C:\\Octave\\3.2.4_gcc-4.4.0\\bin\\gnuplot.exe").start()
     val gnuplotWriter = new BufferedWriter(new OutputStreamWriter(gnuplotProcess.getOutputStream))
 
-    gnuplotWriter.write("set term png size 1000,700"); gnuplotWriter.newLine()
+    gnuplotWriter.write("set term png size 1100,750"); gnuplotWriter.newLine()
     gnuplotWriter.write("set output \"" + fileName + "\""); gnuplotWriter.newLine()
     gnuplotWriter.write("unset key"); gnuplotWriter.newLine()
     gnuplotWriter.write("unset colorbox"); gnuplotWriter.newLine()
     gnuplotWriter.write("set palette gray negative"); gnuplotWriter.newLine()
     gnuplotWriter.write("set xlabel 'Time [s]'"); gnuplotWriter.newLine()
     gnuplotWriter.write("set ylabel 'Frequency [kHz]'"); gnuplotWriter.newLine()
-    //gnuplotWriter.write("set xrange[0:"+duration+"]"); gnuplotWriter.newLine()
-    //gnuplotWriter.write("set yrange[0:"+maxFrequency+"]"); gnuplotWriter.newLine()
+    gnuplotWriter.write("set xrange[0:"+spectra.size+"]"); gnuplotWriter.newLine()
+    gnuplotWriter.write("set yrange[0:"+bandsCount+"]"); gnuplotWriter.newLine()
     gnuplotWriter.write("replot"); gnuplotWriter.newLine()
     gnuplotWriter.write("plot '" + dataFileName + "' matrix with image"); gnuplotWriter.newLine()
     gnuplotWriter.flush
     gnuplotWriter.close
 
-    //new File(dataFileName).delete()
+    gnuplotProcess.waitFor
+
+    new File(dataFileName).delete
   }
 }

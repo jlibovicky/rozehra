@@ -7,8 +7,7 @@ import fft.{FFT}
 class Window[T <: Double](val samplingRate: Frequency, val withShift: Int,
                           val samples: IndexedSeq[T], val maxFrameSize: Int) {
     def size = samples.length
-    def magnitute[T : ClassManifest]: String = classManifest[T].erasure.getName
-    
+
     def +(that: Window[T]) = 
       if (samplingRate != that.samplingRate || size != that.size) 
         throw new Exception("Windows must have the same lenght and sampling rate to be added");       
@@ -24,8 +23,17 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int,
     def toZeroPaddedSpectrum: Spectrum[T] = {
       val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples), maxFrameSize * 2)
       val bandWidth: Frequency = samplingRate / spectrum.length
-      new Spectrum[T](2 * withShift, bandWidth, spectrum.asInstanceOf[IndexedSeq[T]])
+      new Spectrum[T](2 * withShift, bandWidth, spectrum)
     }
+
+    def hanningWindow: Window[T] = {
+      val newValues = FFT.hanningWindow(samples)
+      new Window[T](samplingRate, withShift, newValues, maxFrameSize)
+    }
+
+    def changeMaxFrameSize(newMaxFrameSize: Int) =
+      new Window[T](samplingRate, withShift, samples, newMaxFrameSize)
+
 
     def getEnergy: Energy = {
       if (!this.isInstanceOf[Window[Signal]]) { throw new Exception("Energy can be computed only from signal") }

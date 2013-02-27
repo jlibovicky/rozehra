@@ -21,8 +21,8 @@ class PartialTrackingTest extends FunSuite {
     println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
     //spectrogram.plot
 
-    val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
-    val whitenedSpectrogram = Whitening.whitenSpectrogram(extendedSpectrogram)
+    //val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
+    val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
     val signalWhitened = System.currentTimeMillis
     println("Signal whitening: " + (signalWhitened - spectrogramComputed) / 1000.0 + " s")
     //whitenedSpectrogram.spectra(157).amplitudes.foreach(println)
@@ -41,8 +41,8 @@ class PartialTrackingTest extends FunSuite {
     //tracks.foreach( t => println(t) )
 
     visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))),
-      extendedSpectrogram.spectrumRate)
-    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq), extendedSpectrogram.spectrumRate)
+      whitenedSpectrogram.spectrumRate)
+    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq), whitenedSpectrogram.spectrumRate)
     readLine()
   }
 

@@ -22,8 +22,8 @@ class TestSearching extends FunSuite {
     println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
     //spectrogram.plot
 
-    val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
-    val whitenedSpectrogram = Whitening.whitenSpectrogram(extendedSpectrogram)
+    //val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
+    val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
     //val whitenedSpectrogram = Constants.computePerceptionalSpectrogram(wave.toTimeDomainWaveForm)
     val signalWhitened = System.currentTimeMillis
     whitenedSpectrogram.gnuplot("whitenedSpectrogram.png")

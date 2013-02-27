@@ -25,9 +25,10 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
       val solution = loadCorrectSolution(file)
 
       val wave = new WaveFileReader(new FileInputStream(file))
-      val spectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
-      samplingRate = spectrogram.spectrumRate
-      val whitenedSpectrogram = Whitening.whitenSpectrogram(spectrogram)
+      //val spectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
+
+      val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
+      samplingRate = whitenedSpectrogram.spectrumRate
       val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
       listsOfFundamentals :+= (detectedFundamentals, solution)
       System.err.println("loaded")

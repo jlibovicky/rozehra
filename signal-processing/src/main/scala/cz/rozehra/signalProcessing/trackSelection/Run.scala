@@ -10,13 +10,13 @@ object Run {
    val readFileEnd = System.currentTimeMillis
    println("Reading file: " + (readFileEnd - readFileStart) / 1000.0 + " s")
 
-   val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
-   val spectrogramComputed = System.currentTimeMillis
-   println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
+   //val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
+   //val spectrogramComputed = System.currentTimeMillis
+   //println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
 
-   val whitenedSpectrogram = Whitening.whitenSpectrogram(extendedSpectrogram)
+   val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
    val signalWhitened = System.currentTimeMillis
-   println("Signal whitening: " + (signalWhitened - spectrogramComputed) / 1000.0 + " s")
+   println("Signal whitening: " + (signalWhitened - readFileEnd) / 1000.0 + " s")
    //whitenedSpectrogram.spectra(157).amplitudes.foreach(println)
 
 
@@ -36,7 +36,7 @@ object Run {
    println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
 
    val searchingStart = System.currentTimeMillis()
-   val result = TrackSelection.run(TrackSelection.convertTrackToSearchTracks(tracks, extendedSpectrogram.spectrumRate))
+   val result = TrackSelection.run(TrackSelection.convertTrackToSearchTracks(tracks, whitenedSpectrogram.spectrumRate))
    println("Track searching: " + (System.currentTimeMillis() - searchingStart) / 1000.0 + " s")
    println(result.size)
  }
