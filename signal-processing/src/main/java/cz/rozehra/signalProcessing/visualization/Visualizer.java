@@ -12,7 +12,8 @@ import java.util.List;
 
 public class Visualizer extends JFrame {
     public static final int horizontalShift = 0;
-    public static final int horizontalScale = 2;
+    public static final int horizontalScale = 8;
+    public static final int topFreqStart = 1536;
 
     private JFrame window;
     private JPanel mainPanel;
@@ -107,5 +108,9 @@ public class Visualizer extends JFrame {
 
     public void drawHypothesis(Hypothesis hypothesis) {
         drawer.addHypothesis(hypothesis);
+    }
+
+    public void drawSolution(List<Double> solutions) {
+        drawer.addSolution(solutions);
     }
 }

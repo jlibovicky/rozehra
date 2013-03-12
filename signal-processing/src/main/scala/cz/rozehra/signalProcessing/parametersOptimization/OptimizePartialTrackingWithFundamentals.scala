@@ -6,12 +6,15 @@ import cz.rozehra.signalProcessing.partialtracking.Track
 import scala.io.Source
 import scala.math._
 import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
+import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct.CBHSP
 
 object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
   val toneTolerances: Seq[Double] = Seq(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
   val maximumWithoutUpdateValues: Seq[Int] = Seq(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
   val minimumTrackDensities: Seq[Double] = Seq(0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
   val minimumTrackDurations: Seq[Int] = Seq(1, 2, 3, 4, 5, 6, 7)
+  val fundDetector: FundamentalsDetection = CBHSP
 
   def main(args: Array[String]) {
     val testDirectory = new File(args(0))
@@ -20,16 +23,15 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
                                      //  list of sets of peaks <|> correct solutions
     var listsOfFundamentals = Seq.empty[(List[Seq[(Frequency, Double)]], Seq[Double])]
     var samplingRate = 0.0
-    for (file <- files.take(1)) {
+    for (file <- files) {
       System.err.print("File " + file.getName + " ... ")
       val solution = loadCorrectSolution(file)
 
       val wave = new WaveFileReader(new FileInputStream(file))
       //val spectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
 
-      val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
-      samplingRate = whitenedSpectrogram.spectrumRate
-      val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
+      samplingRate = fundDetector.spectrogramSamplingRate(wave.samplingRate)
+      val detectedFundamentals = fundDetector.detectFundamentals(wave.toTimeDomainWaveForm)
       listsOfFundamentals :+= (detectedFundamentals, solution)
       System.err.println("loaded")
     }
@@ -45,7 +47,6 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
     println("voiced segments frequency recall = " + vPitchSum / preprocessedFiles.size )
     println("voiced segments tone recall = " + vNoteSum / preprocessedFiles.size)
 
-    sys.exit()
     println()
     println("PARTIAL TRACKING OPTIMIZATION")
     println("tone tolerance,maximum steps without update,minimum track density,minimum track duration,pitch precision," +

@@ -45,4 +45,11 @@ class SpectrumWhitener(val transform: FreqDomainWindow) {
     val spectrum = newAmplitudesRev.reverse.toIndexedSeq.take((transform.length / 2)).map(n => n.abs)
     new Spectrum[Signal](2 * transform.withWindowShift, transform.samplingRate / spectrum.length, spectrum)
   }
+
+  def getWhitenedFreqDomainWindow = {
+    var newAmplitudesRev = List.empty[Complex]
+    for (k <- 0 until transform.length)
+      newAmplitudesRev ::= transform.values(k) multiply gamma(k)
+    new FreqDomainWindow(transform.withWindowShift, transform.samplingRate, newAmplitudesRev.reverse.toIndexedSeq)
+  }
 }

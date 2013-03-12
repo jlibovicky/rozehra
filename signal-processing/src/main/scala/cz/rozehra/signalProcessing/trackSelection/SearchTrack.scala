@@ -3,6 +3,8 @@ package cz.rozehra.signalProcessing.trackSelection
 import cz.rozehra.signalProcessing.{Frequency, Time}
 import math._
 import org.apache.commons.math3.distribution.NormalDistribution
+import java.io.File
+import io.Source
 
 class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
     AbstractSearchTrack(frequencies, start, end) {
@@ -10,6 +12,8 @@ class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
   private val durationTolerance = TrackSelectionParameters.durationTolerance
   private val timeStep = TrackSelectionParameters.timeStep
   private val durationWeight = TrackSelectionParameters.durationTolerance
+  private val lowestNote = TrackSelectionParameters.lowestNote
+  private val highestNote = TrackSelectionParameters.highestNote
 
   def duration = end - start
   val tones = frequencies.map( toneFromFreq )
@@ -26,20 +30,24 @@ class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
                   else toneDist.cumulativeProbability(tonesMean - tonesSd, tonesMean + tonesSd)
 
       scoredPitches += ((tone, score))
-      if (tone > 12) scoredPitches += ((tone - 12, octavePenalty * score))
-      if (tone < 115) scoredPitches += ((tone + 12, octavePenalty * score))
+      if (octavePenalty != 0) {
+        if (tone > lowestNote + 12) scoredPitches += ((tone - 12, octavePenalty * score))
+        if (tone < highestNote - 12) scoredPitches += ((tone + 12, octavePenalty * score))
+      }
     }
 
     val pitchScoreSum = scoredPitches.foldLeft(0.0)(_ + _._2)
     val normedScoredPitches = scoredPitches.map(p => (p._1, p._2 / pitchScoreSum))
 
     val durationInterval = durationTolerance * (end - start)
-    val stepsCount = round(durationInterval / timeStep).asInstanceOf[Int]
+    val stepsCount = round(durationInterval / timeStep).toInt
 
-    val startLeftBound = round((start - durationInterval) * 100) / 100
+    val startLeftBound = if (stepsCount == 0) round(100.0 * start) / 100.0
+                         else round((start - durationInterval / 2) * 100.0) / 100.0
     val startPossibilities = (0 to stepsCount).map(startLeftBound + _ * timeStep)
 
-    val endLeftBound = round((start - durationInterval) * 100) / 100
+    val endLeftBound = if (stepsCount == 0) round(100.0 * end) / 100.0
+                       else round((end - durationInterval / 2) * 100.0) / 100.0
     val endPossibilities = (0 to stepsCount).map(endLeftBound + _ * timeStep)
 
     val scoredTimeIntervals = (for (s <- startPossibilities; e <- endPossibilities) yield (s, e)).

@@ -46,7 +46,8 @@ class Spectrogram[T <: Double](val spectrumRate: Frequency, val spectra: List[Sp
     gnuplotWriter.write("set xrange[0:"+spectra.size+"]"); gnuplotWriter.newLine()
     gnuplotWriter.write("set yrange[0:"+bandsCount+"]"); gnuplotWriter.newLine()
     gnuplotWriter.write("replot"); gnuplotWriter.newLine()
-    gnuplotWriter.write("plot '" + dataFileName + "' matrix with image"); gnuplotWriter.newLine()
+    gnuplotWriter.write("plot '" + dataFileName + "' matrix with image u ($1/"+spectrumRate+"):($2*"+
+      bandWidth+"/1000)"); gnuplotWriter.newLine()
     gnuplotWriter.flush
     gnuplotWriter.close
 

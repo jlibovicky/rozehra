@@ -1,12 +1,13 @@
 package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriPerceptional
 
 import scala.math._
-import cz.rozehra.signalProcessing.{Spectrogram, Filters, TimeDomainWaveForm, Signal}
-import org.apache.commons.math3.linear.{RealMatrix, Array2DRowRealMatrix}
+import cz.rozehra.signalProcessing._
+import org.apache.commons.math3.linear.{BlockFieldMatrix, RealMatrix, Array2DRowRealMatrix}
+import org.apache.commons.math3.complex.{ComplexField, Complex}
 
-object Constants {
+object PerceptionalFundamentalsDetection {
   val centroidsCount = 30
-  val freqLowerBound = 60
+  val freqLowerBound = 30
   val freqUpperBound = 5200
 
   private def ERBS(f: Double) = 21.4 * log10(1 + 0.00437 * f)
@@ -23,10 +24,9 @@ object Constants {
     val signalWindowSize = 4096
     val spectrumRate = signal.samplingRate / signalWindowShift
     val bandWidth = signal.samplingRate / signalWindowSize
-    val bandsCount = signalWindowSize / 2
-    val spectraCount = ceil(signal.samples.size / signalWindowShift).toInt
+    val windowsCount = ceil(signal.samples.size / signalWindowShift).toInt
 
-    var matrix = new Array2DRowRealMatrix(bandsCount + 1, spectraCount + 1)
+    var matrix = new BlockFieldMatrix[Complex](ComplexField.getInstance(),signalWindowSize, windowsCount + 1)
 
     for (i <- 0 until centroidsCount) {
       val iThBand = Filters.bandPassFilter(signal.samples, signal.samplingRate,
@@ -34,11 +34,22 @@ object Constants {
       val compressedRectified = iThBand.map(x => HWR(FWC(x)))
       val lowPassFiltered = Filters.lowPassFilter(compressedRectified, signal.samplingRate, centroids(i) * 2)
       val z_c = new TimeDomainWaveForm[Signal](signal.samplingRate, lowPassFiltered)
-      val Z_c = z_c.segmentToWindows(4096, 2048).toSpectrogram
-      matrix = matrix add Z_c.asMatrix
+      val Z_c = z_c.segmentToWindows(4096, 2048).windows.map(w => new FreqDomainWindow(w))
+
+      val matrixToAdd = new BlockFieldMatrix[Complex](ComplexField.getInstance(), signalWindowSize, windowsCount + 1)
+      for ((window, index) <- Z_c.zipWithIndex)
+        matrixToAdd.setColumn(index, window.values.toArray)
+
+      matrix = matrix add matrixToAdd
     }
 
-    new Spectrogram[Signal](matrix, signalWindowShift, bandWidth, spectrumRate, signalWindowSize)
+    var spectraRev = List.empty[Spectrum[Signal]]
+    for (i <- 0 until matrix.getColumnDimension) {
+      val amplitudes  = matrix.getColumn(i).take(matrix.getRowDimension / 2).map(_.abs)
+      spectraRev ::= new Spectrum[Signal](signalWindowShift, bandWidth, amplitudes)
+    }
+
+    new Spectrogram[Signal](spectrumRate, spectraRev.reverse, signalWindowSize, signalWindowShift)
   }
 
   private def FWC(x: Double) = if (x >= 0) pow(x, nu)

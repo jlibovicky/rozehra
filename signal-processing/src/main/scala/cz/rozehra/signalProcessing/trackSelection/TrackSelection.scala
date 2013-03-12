@@ -1,22 +1,22 @@
 package cz.rozehra.signalProcessing.trackSelection
 
-import cz.rozehra.signalProcessing.languageModeling.{LMFormat, SRILMWrapper, LanguageModel}
+import cz.rozehra.signalProcessing.languageModeling.{LMFormat, SRILMWrapperRescore, LanguageModel}
 import cz.rozehra.signalProcessing.partialtracking.Track
 import math.{abs, log, min, pow}
 
 
 object TrackSelection {
   private val languageModel = TrackSelectionParameters.languageModel
-  private val lmFormat = TrackSelectionParameters.languageModel
+  private val lmFormat = TrackSelectionParameters.lmFormat
   private val previousTracksToFollow = TrackSelectionParameters.previousTracksToFollow
   private val nBestSize = TrackSelectionParameters.nBestSize
   private val edgeCandidatesCount = TrackSelectionParameters.edgeCandidatesCount
 
   def run(tracks: Seq[SearchTrack]): Seq[Hypothesis] = {
-    val allHypoheses = iterateTrackSelection(Seq.empty, tracks, 0, Seq.empty).map(_.hypotheses).flatten.
+    val allHypotheses = iterateTrackSelection(Seq.empty, tracks, 0, Seq.empty).map(_.hypotheses).flatten.
       groupBy(_.toString).map(_._2.maxBy(_.actualScore))
 
-    languageModel.rescoreNBest(allHypoheses).take(min(allHypoheses.size, 2 * nBestSize))
+    languageModel.rescoreNBest(allHypotheses).take(min(allHypotheses.size, 2 * nBestSize))
   }
 
   private def iterateTrackSelection(processedTracks: Seq[SearchTrackWithHypotheses],
@@ -36,7 +36,7 @@ object TrackSelection {
         // if necessary shorten the previous note to prevent overlap
         val noteSeq =
           if (hypothesis.notes.last.end <= note.start) hypothesis.notes :+ note
-          else hypothesis.notes.dropRight(1) :+ hypothesis.notes.last.shiftStart(note.start) :+ note
+          else (hypothesis.notes.dropRight(1) :+ hypothesis.notes.last.shiftEnd(note.start) :+ note).filter(_.duration > 0.02)
         // new hypothesis with cumulative score
         newHypotheses += new Hypothesis(noteSeq, hypothesis.actualScore + bytelog(noteScore))
       }
@@ -44,7 +44,7 @@ object TrackSelection {
       print("   >>> continuation hypotheses: " + newHypotheses.size + ", ")
 
       // there may the same hypothesis created different way ... tak those with maximum score
-      val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.toString).
+      val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.SRILMString(lmFormat)).
         map( _._2.maxBy(_.normScore) ))
 
       print(uniqueHypotheses.size + " of them unique")
@@ -110,6 +110,6 @@ object TrackSelection {
    */
   def convertTrackToSearchTracks(tracks: Set[Track], spectrumRate: Double): Seq[SearchTrack] =
     (for (track <- tracks.toSeq)
-      yield new SearchTrack(track.frequencies, (track.start + 0.0) / spectrumRate, (track.end  + 0.0) / spectrumRate)).
+      yield new SearchTrack(track.frequencies, (track.start.toDouble) / spectrumRate, (track.end.toDouble) / spectrumRate)).
     sortBy(_.start)
 }

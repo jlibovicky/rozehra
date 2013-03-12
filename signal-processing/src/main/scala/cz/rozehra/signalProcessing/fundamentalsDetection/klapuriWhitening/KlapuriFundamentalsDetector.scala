@@ -4,16 +4,16 @@ import scala.math._
 import cz.rozehra.signalProcessing._
 
 class KlapuriFundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRate: Double) {
-  val alpha = 52.0 //27.0  // Hz
+  val alpha =  52.0 //27.0  // Hz
   val beta = 320.0 //320.0  // Hz
-  val minimumPeriod = samplingRate / 4200.0  //  4.2 kHz  ... approx. the highest piano note
-  val maximumPeriod = samplingRate / 20.0   // 20 Hz ... approx. the lowest piano tone
+  val minimumPeriod = samplingRate / 600.0 //4200.0  //  4.2 kHz  ... approx. the highest piano note
+  val maximumPeriod = samplingRate / 100.0 // 20.0   // 20 Hz ... approx. the lowest piano tone
   val harmonicsCount = 10
   val deltaPeriod = 0.5 //
-  val periodPrecision = 1e-6 //0.5 // ??? compute how much are these in frequency and think about it
+  val periodPrecision = 1.0 //0.5 // ??? compute how much are these in frequency and think about it
   val foundSoundSubtraction = 0.89 // 1.0
   val gammaForStopMeasure = 0.7
-  val maximumFundamentalsInSpectrum = 4
+  val maximumFundamentalsInSpectrum = 3
 
   def gFunction(period: Double, m: Int) =
     (samplingRate / period + alpha) / (m * samplingRate / period + beta)
@@ -93,21 +93,6 @@ class KlapuriFundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRa
     (qBest.tauAvg, salienceFunction(qBest.tauAvg))
   }
 
-  /*def maximumSearch(amplitudes: IndexedSeq[Double]) = {
-    def iterate(tauLow: Double, tauUp: Double): Double =
-      if (tauUp - tauLow < periodPrecision) (tauUp + tauLow) / 2
-      else {
-        val tauMiddle = (tauUp + tauLow) / 2
-        if(salienceEstimate(tauLow, tauMiddle, amplitudes) > salienceEstimate(tauMiddle, tauUp, amplitudes))
-          iterate(tauLow, tauMiddle)
-        else iterate(tauMiddle, tauUp)
-      }
-
-    val period = iterate(minimumPeriod, maximumPeriod)
-    val salience = salienceFunction(period)
-    (period, salience)
-  }   */
-
   def findFundamentals = {
     def iterate(amplitudes: IndexedSeq[Double], stopMeasure: Double, acc: Seq[(Frequency, Double)]): Seq[(Frequency, Double)] = {
       val newFundamentalPeriod = maximumSearch(amplitudes)
@@ -121,18 +106,23 @@ class KlapuriFundamentalsDetector(val spectrum: Spectrum[Signal], val samplingRa
         detectedSound(fundamentalIndex) = amplitudes(fundamentalIndex)
         for (m <- 2 to harmonicsCount) {
           val index = floor(m * 2 * amplitudes.size / newFundamentalPeriod._1).asInstanceOf[Int]
-          if (index < amplitudes.size + 1){
-                detectedSound(index) = gFunction(newFundamentalPeriod._1, m) * amplitudes(index)
-          }
+          if (index < amplitudes.size + 1)
+            detectedSound(index) = gFunction(newFundamentalPeriod._1, m) * amplitudes(index)
         }
 
         val residualAmplitudes = for (i <- 0 until amplitudes.size)
           yield max(0, amplitudes(i) - foundSoundSubtraction * detectedSound(i))
 
-        iterate(residualAmplitudes, newStopMeasure, acc :+ (samplingRate / newFundamentalPeriod._1, newFundamentalPeriod._2) )
+        val newFrequency = samplingRate / newFundamentalPeriod._1
+        val newAcc = if (acc.exists( fs => 12 * abs(log(fs._1 / newFrequency) / log(2)) < 0.25 )) acc
+                     else acc :+ (newFrequency, newFundamentalPeriod._2)
+
+        iterate(residualAmplitudes, newStopMeasure, newAcc)
       }
     }
 
-    iterate(spectrum.amplitudes, Double.MinValue, Seq.empty).groupBy(_._1).map(_._2.maxBy(_._2)).toSeq
+    iterate(spectrum.amplitudes, Double.MinValue, Seq.empty).groupBy(f => freqToTone(f._1)).map(_._2.maxBy(_._2)).toSeq
   }
+
+  private def freqToTone(f: Double): Int = 69 + round(12 * log(f/440.0) / log(2)).toInt
 }

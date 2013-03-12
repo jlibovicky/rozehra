@@ -199,6 +199,15 @@
                             <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizePeakDetection</mainClass>
                             <name>PeakDetectionOptimization</name>
                         </program>
+
+                        <program>
+                            <jvmSettings>
+                                <maxMemorySize>2g</maxMemorySize>
+                            </jvmSettings>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.VoicingOptimization</mainClass>
+                            <name>VoicingOptimization</name>
+                        </program>
+
                     </programs>
                 </configuration>
             </plugin>

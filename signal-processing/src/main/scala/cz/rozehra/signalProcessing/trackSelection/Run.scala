@@ -14,14 +14,8 @@ object Run {
    //val spectrogramComputed = System.currentTimeMillis
    //println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
 
-   val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
-   val signalWhitened = System.currentTimeMillis
-   println("Signal whitening: " + (signalWhitened - readFileEnd) / 1000.0 + " s")
-   //whitenedSpectrogram.spectra(157).amplitudes.foreach(println)
-
-
    val fundamentalsStart = System.currentTimeMillis
-   val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
+   val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(wave.toTimeDomainWaveForm)
    val fundamentalsEnd = System.currentTimeMillis
    println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
 
@@ -36,7 +30,8 @@ object Run {
    println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
 
    val searchingStart = System.currentTimeMillis()
-   val result = TrackSelection.run(TrackSelection.convertTrackToSearchTracks(tracks, whitenedSpectrogram.spectrumRate))
+   val result = TrackSelection.run(TrackSelection.convertTrackToSearchTracks(tracks,
+     KlapuriFundamentalDetection.spectrogramSamplingRate(wave.samplingRate)))
    println("Track searching: " + (System.currentTimeMillis() - searchingStart) / 1000.0 + " s")
    println(result.size)
  }

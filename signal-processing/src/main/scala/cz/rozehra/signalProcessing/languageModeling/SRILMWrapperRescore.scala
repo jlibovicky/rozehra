@@ -6,16 +6,16 @@ import cz.rozehra.signalProcessing.languageModeling.LMFormat.LMFormat
 import scala.math.{round}
 import util.control.Breaks
 
-class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmFormat: LMFormat) extends LanguageModel  {
+class SRILMWrapperRescore(val pathToNgram: String, val pathToModel: String, val lmFormat: LMFormat) extends LanguageModel  {
   def this(pathToModel: String, lmFormat: LMFormat) = this("ngram", pathToModel, lmFormat)
 
   val pathToLogFile = "srilm-last.log"
   // start the server process
-  private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-lm",
-    pathToModel, "-server-port", "19000").start
-  serverProcess.getErrorStream.read // wait until the server is started
-  new errorReader(serverProcess.getErrorStream).start()
-  new errorReader(serverProcess.getInputStream).start()
+  //private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-lm",
+  //  pathToModel, "-server-port", "19000").start
+  //serverProcess.getErrorStream.read // wait until the server is started
+  //new dummyReader(serverProcess.getErrorStream).start()
+  //new dummyReader(serverProcess.getInputStream).start()
 
   /**
    * Rescores the list of hypothesis and returns it in the new order.
@@ -25,7 +25,7 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
   def rescoreNBest(nBest: Iterable[Hypothesis]): Seq[Hypothesis] = {
     if (nBest.isEmpty) Seq.empty[Hypothesis]
     else {
-      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "3", "-use-server", "19000",
+      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-use-server", "19000",
         "-nbest", "-", "-no-eos").start()
       val ngramWriter = new BufferedWriter(new OutputStreamWriter(ngramProcess.getOutputStream))
 
@@ -39,7 +39,7 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
       ngramWriter.close
 
       val ngramReader = new BufferedReader(new InputStreamReader(ngramProcess.getInputStream))
-      new errorReader(ngramProcess.getErrorStream).start()
+      new dummyReader(ngramProcess.getErrorStream).start()
 
       var reWeightedHypotheses = Seq.empty[(Double, Hypothesis)]
       val loop = new Breaks
@@ -50,7 +50,7 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
           //println(line)
           val parsedLine = line.split(" ")
 
-          val logScore = parsedLine(1).toDouble
+          val logScore = parsedLine(0).toDouble
           val notesCount = parsedLine(2).toInt
           val SRILMString = parsedLine.drop(3).mkString(" ")
 
@@ -59,7 +59,7 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
       )
       ngramReader.close()
 
-      if (reWeightedHypotheses.isEmpty) nBest.toSeq.sortBy(_.actualScore)
+      if (reWeightedHypotheses.isEmpty) nBest.toSeq.sortBy(-_.actualScore)
       else reWeightedHypotheses.sortBy( -_._1).unzip._2
     }
   }
@@ -71,9 +71,9 @@ class SRILMWrapper(val pathToNgram: String, val pathToModel: String, val lmForma
    */
   def mostLikelyNext(hypothesis: Hypothesis): Note = ???
 
-  override def finalize() { serverProcess.destroy() }
+  //override def finalize() { serverProcess.destroy() }
 
-  private class errorReader(errOutputStream: InputStream) extends Thread {
+  private class dummyReader(errOutputStream: InputStream) extends Thread {
     override def run() {
       val errorReader = new BufferedReader(new InputStreamReader(errOutputStream))
       val loop2 = new Breaks

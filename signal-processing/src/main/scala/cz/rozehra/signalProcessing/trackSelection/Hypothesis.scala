@@ -21,7 +21,7 @@ class Hypothesis private (val notes: Seq[Note], val actualScore: Double, val nor
 
       if (pauseDuration > 0.03) {
         builder ++= "pause;"
-        builder ++= formatTime(format, pauseDuration / previousNote.duration)
+        builder ++= formatTime(format, previousNote.duration, pauseDuration)
 
         builder ++= " "
         previousDuration = pauseDuration
@@ -33,7 +33,7 @@ class Hypothesis private (val notes: Seq[Note], val actualScore: Double, val nor
       builder ++= (previousNote.pitch - note.pitch).toString
       builder ++= ";"
 
-      builder ++= formatTime(format, modifiedNote.duration / previousDuration)
+      builder ++= formatTime(format, previousDuration, modifiedNote.duration)
 
       builder ++= " "
       previousNote = note
@@ -42,25 +42,13 @@ class Hypothesis private (val notes: Seq[Note], val actualScore: Double, val nor
   }
 
   private val noPlace = new DecimalFormat("#")
-  private val onePlace = new DecimalFormat("#.#")
-  private val twoPlaces = new DecimalFormat("#.##")
 
-  private def formatTime(format: LMFormat, number: Double): String = {
+  private def formatTime(format: LMFormat, firstDuration: Double, secondDuration: Double): String = {
     def notNegativeZero(num: Double) = if (num == -0.0) 0.0 else num
-    if (format == LMFormat.Round1Rat) {
-      onePlace.format(notNegativeZero(number))
-    }
-    else if (format == LMFormat.Round0Rat) {
-      noPlace.format(notNegativeZero(number))
-    }
-    else if (format == LMFormat.Round2Rat) {
-      twoPlaces.format(notNegativeZero(number))
-    }
-    else if (format == LMFormat.Round1Log) {
-      onePlace.format((notNegativeZero(log(number) / log(2))))
-    }
-    else if (format == LMFormat.Round2Log) {
-      twoPlaces.format((notNegativeZero(log(number) / log(2))))
+    if (format == LMFormat.Round0Rat) {
+      if (secondDuration >= firstDuration) noPlace.format(notNegativeZero(secondDuration / firstDuration))
+      else "1/" + noPlace.format(notNegativeZero(firstDuration / secondDuration))
+
     }
     else null
   }

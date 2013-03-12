@@ -1,6 +1,5 @@
 package cz.rozehra.signalProcessing
 
-import fundamentalsDetection.jojooyo.JoJooYoFundamentalsDetection
 import fundamentalsDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
 import org.scalatest.FunSuite
 import java.io.InputStream
@@ -21,17 +20,11 @@ class PartialTrackingTest extends FunSuite {
     println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
     //spectrogram.plot
 
-    //val extendedSpectrogram = wave.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
-    val whitenedSpectrogram = Whitening.whitenSpectrogram(wave.toTimeDomainWaveForm)
-    val signalWhitened = System.currentTimeMillis
-    println("Signal whitening: " + (signalWhitened - spectrogramComputed) / 1000.0 + " s")
-    //whitenedSpectrogram.spectra(157).amplitudes.foreach(println)
-
-    val visualizer2 = new Visualizer()
+     val visualizer2 = new Visualizer()
     visualizer2.drawSpectrum(spectrogram)
 
     val fundamentalsStart = System.currentTimeMillis
-    val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(whitenedSpectrogram, wave.samplingRate)
+    val detectedFundamentals = KlapuriFundamentalDetection.detectFundamentals(wave.toTimeDomainWaveForm)
     val fundamentalsEnd = System.currentTimeMillis
     println("Fundamentals detection: " + (fundamentalsEnd - fundamentalsStart) / 1000.0 + " s")
 
@@ -40,9 +33,10 @@ class PartialTrackingTest extends FunSuite {
     println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
     //tracks.foreach( t => println(t) )
 
+    val spectrumRate = KlapuriFundamentalDetection.spectrogramSamplingRate(wave.samplingRate)
     visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))),
-      whitenedSpectrogram.spectrumRate)
-    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq), whitenedSpectrogram.spectrumRate)
+      spectrumRate)
+    visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq), spectrumRate)
     readLine()
   }
 

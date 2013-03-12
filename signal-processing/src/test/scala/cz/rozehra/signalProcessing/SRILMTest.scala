@@ -1,13 +1,13 @@
 package cz.rozehra.signalProcessing
 
-import languageModeling.{LMFormat, SRILMWrapper}
+import languageModeling.{LMFormat, SRILMWrapperRescore}
 import org.scalatest.FunSuite
 import trackSelection.{Note, Hypothesis}
 
 
 class SRILMTest extends FunSuite {
   test("srilm rescoring") {
-    val lm = new SRILMWrapper("c:\\cygwin\\srilm\\bin\\Release\\ngram.exe",
+    val lm = new SRILMWrapperRescore("c:\\cygwin\\srilm\\bin\\Release\\ngram.exe",
        "C:\\MFF\\rozehra\\all-rat1.lm.gz", LMFormat.Round1Rat)
 
     val testHypothesis = Seq(

@@ -43,7 +43,7 @@ object NoteOnsetDetection {
 
 
 
-  def computeNoteOnsetTimes(energyFlux: TimeDomainWaveForm[EnergyFlux]): Seq[Time] = {
+  /*def computeNoteOnsetTimes(energyFlux: TimeDomainWaveForm[EnergyFlux]): Seq[Time] = {
     val positiveOnly = energyFlux.samples.map( e => if (e > 0.0) e else 0.0)
     val afterMedianFilter = Filters.medianFilter(positiveOnly, 501)
     val afterSmoothing = Filters.triangularSmoothIterative(afterMedianFilter, 1200)
@@ -54,6 +54,15 @@ object NoteOnsetDetection {
 
     // the smoothing leads to shift to the right => shift to the left by five constant
     times.map(e => e + timeCorrection )
+  } */
+
+  def computeNoteOnsetTimes(energyFlux: TimeDomainWaveForm[EnergyFlux]): Seq[Time] = {
+    val positiveOnly = energyFlux.samples.map( e => if (e > 0.0) e else 0.0)
+    val afterMedianFilter = Filters.medianFilter(positiveOnly, 501)
+    val afterSmoothing = Filters.triangularSmoothIterative(afterMedianFilter, 1200)
+
+    val peaks = Filters.findPeaks(2.0, afterSmoothing)
+    peaks.unzip._1.toSeq.sorted.map(i => (i.toDouble / energyFlux.samplingRate))
   }
 
 }

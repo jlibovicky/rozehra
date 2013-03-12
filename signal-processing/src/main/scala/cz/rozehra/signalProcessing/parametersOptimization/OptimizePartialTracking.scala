@@ -27,10 +27,10 @@ trait OptimizePartialTracking extends OptimizeFrequenciesBase {
       if ((frequency == 0) && trackOnTime.isEmpty) { totalFrequencyRecall += 1.0; totalToneRecall += 1.0 }
       else if (!trackOnTime.isEmpty) {
         totalFrequencyRecall += trackOnTime.filter(
-          t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) < 0.25 ).size /
+          t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) < 0.45 ).size /
           trackOnTime.size.asInstanceOf[Double]
         totalToneRecall += trackOnTime.filter(
-          t => abs(toneFromFreq(t.averageFrequency) % 12.0 - toneFromFreq(frequency) % 12.0)  < 0.25).size /
+          t => abs(toneFromFreq(t.averageFrequency) % 12.0 - toneFromFreq(frequency) % 12.0)  < 0.45).size /
           trackOnTime.size.asInstanceOf[Double]
       }
 
