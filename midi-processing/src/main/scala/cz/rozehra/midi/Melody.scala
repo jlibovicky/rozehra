@@ -3,7 +3,8 @@ package cz.rozehra.midi
 import scala.math._
 import java.text.DecimalFormat
 
-class Melody (val notes: Array[Note]) extends Serializable {
+class
+Melody (val notes: Array[Note]) extends Serializable {
   def this(notes: Seq[Note]) = this(notes.toArray)
   def durationInBeats = notes.last.end - notes.head.start
 
