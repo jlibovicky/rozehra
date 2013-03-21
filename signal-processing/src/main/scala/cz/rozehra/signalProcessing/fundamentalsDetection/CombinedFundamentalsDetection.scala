@@ -14,7 +14,9 @@ object CombinedFundamentalsDetection extends FundamentalsDetection {
     var finalListRev = List.empty[Seq[(Frequency, Double)]]
     for ( (cbhsp, klap) <- cbhspResult zip klapuriResult ) {
       val pitchCandidate = freqToTone(cbhsp.head._1)
-      finalListRev ::= Seq(klap.filter(f => abs(pitchCandidate - freqToTone(f._1)) < 0.25).maxBy(_._2))
+      val plausibleCandidates = klap.filter(f => abs(pitchCandidate - freqToTone(f._1)) < 0.25)
+      if (plausibleCandidates.isEmpty) finalListRev ::= Seq.empty
+      else finalListRev ::= Seq(plausibleCandidates.maxBy(_._2))
     }
     finalListRev.reverse
   }

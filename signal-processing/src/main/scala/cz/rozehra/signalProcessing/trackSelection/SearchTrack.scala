@@ -22,12 +22,10 @@ class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
     val tonesSd = sqrt(tones.foldLeft(0.0)( (s, f) => s + pow(f - tonesMean, 2.0)) / tones.size)
 
     var scoredPitches = Set.empty[(Int, Double)]
-    for (tone <- if (tonesSd > 0) Set(floor(tonesMean).asInstanceOf[Int] - 1, floor(tonesMean).asInstanceOf[Int],
-                                   ceil(tonesMean).asInstanceOf[Int], ceil(tonesMean).asInstanceOf[Int] + 1 )
-                 else Set(floor(tonesMean).asInstanceOf[Int], ceil(tonesMean).asInstanceOf[Int])) {
-      val toneDist = new NormalDistribution(tone, 0.5)
-      val score = if (tonesSd == 0) 1 - abs(tone - tonesMean)
-                  else toneDist.cumulativeProbability(tonesMean - tonesSd, tonesMean + tonesSd)
+    for (tone <- Set(floor(tonesMean).asInstanceOf[Int], ceil(tonesMean).asInstanceOf[Int])) {
+      //val toneDist = new NormalDistribution(tone, 0.5)
+      val score = 1 - abs(tone - tonesMean) //if (tonesSd == 0)
+                  //else toneDist.cumulativeProbability(tonesMean - tonesSd, tonesMean + tonesSd)
 
       scoredPitches += ((tone, score))
       if (octavePenalty != 0) {
@@ -59,7 +57,7 @@ class SearchTrack(frequencies: Seq[Frequency], start: Time, end: Time) extends
 
     (for ( (pitch, pitchScore) <- normedScoredPitches; (interval, durationScore) <- normedScoredTimeIntervals)
       yield (new Note(pitch, interval._1, interval._2), pitchScore * pow(durationScore, durationWeight))).toSeq.
-        sortBy(_._2)
+        sortBy(-_._2)
   }
 
   private def toneFromFreq(frequency: Double): Double = 69.0 + 12 * log(frequency / 440.0) / log(2.0)

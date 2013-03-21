@@ -6,8 +6,10 @@ import cz.rozehra.signalProcessing.languageModeling.LMFormat
 import cz.rozehra.signalProcessing.languageModeling.LMFormat.LMFormat
 
 class Hypothesis private (val notes: Seq[Note], val actualScore: Double, val normConstant: Double) {
+  val densityBonification = TrackSelectionParameters.densitiyBonification
+
   def this(notes: Seq[Note], actualScore: Double) = this(notes, actualScore, 0)
-  val scorePerNote = actualScore / notes.size
+  val scorePerNote = actualScore / pow(notes.size, densityBonification)
   val normScore = scorePerNote - normConstant
 
   def SRILMString(format: LMFormat): String = {
@@ -19,7 +21,7 @@ class Hypothesis private (val notes: Seq[Note], val actualScore: Double, val nor
       val pauseDuration = note.start - previousNote.end
       var previousDuration = previousNote.duration
 
-      if (pauseDuration > 0.03) {
+      if (pauseDuration >= 0.03) {
         builder ++= "pause;"
         builder ++= formatTime(format, previousNote.duration, pauseDuration)
 

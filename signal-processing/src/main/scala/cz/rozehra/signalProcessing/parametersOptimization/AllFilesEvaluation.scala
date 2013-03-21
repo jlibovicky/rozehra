@@ -8,9 +8,11 @@ import math._
 import scala.Predef._
 import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
 import cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct.HSP
+import cz.rozehra.signalProcessing.partialtracking.PartialTrackingForCBHSB
 
-object OptimizeTrackSearch extends OptimizeTrackSearchBase {
+object AllFilesEvaluation extends OptimizeTrackSearchBase {
   override val fundamentalsAlgorithm = HSP
+  override val partialTrackingAlgorithm = PartialTrackingForCBHSB
 
   def main(args: Array[String]) {
       val testDirectory = new File(args(0))

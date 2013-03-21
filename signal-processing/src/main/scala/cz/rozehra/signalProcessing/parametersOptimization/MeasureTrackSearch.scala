@@ -5,11 +5,13 @@ import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{Klapu
 import cz.rozehra.signalProcessing.trackSelection.{Hypothesis, TrackSelection}
 import java.io.File
 import math._
-import cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct.{CBHSP, HSP}
+import cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct.{CBHSPwithWhitening, CBHSP, HSP}
 import cz.rozehra.signalProcessing.fundamentalsDetection.CombinedFundamentalsDetection
+import cz.rozehra.signalProcessing.partialtracking.{PartialTrackingForCBHSB, GenericPartialTracking}
 
 object MeasureTrackSearch extends OptimizeTrackSearchBase {
-  override val fundamentalsAlgorithm = CombinedFundamentalsDetection
+  override val fundamentalsAlgorithm = CBHSP
+  override val partialTrackingAlgorithm = PartialTrackingForCBHSB
 
   def main(args: Array[String]) {
     val score = testAFile("C:\\MFF\\rozehra\\mirex05TrainFiles\\train01.wav")
@@ -20,4 +22,6 @@ object MeasureTrackSearch extends OptimizeTrackSearchBase {
     println("Raw Chroma Accuracy: " + score._3)
     println("Overall Accuracy: " + score._4)
   }
+
+
 }

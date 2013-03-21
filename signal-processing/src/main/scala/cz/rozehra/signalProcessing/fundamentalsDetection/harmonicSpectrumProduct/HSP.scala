@@ -9,7 +9,7 @@ object HSP extends FundamentalsDetection {
   override def detectFundamentals(signal: TimeDomainWaveForm[Signal]): List[Seq[(Frequency, Double)]] = {
 
     val newSpectra = signal.segmentToWindows(4096, 2048).windows.
-      map(w => w.hanningWindow.changeMaxFrameSize(8192).toSpectrum)
+      map(w => w.changeMaxFrameSize(8192).toSpectrumRectWindow)
     val spectrogram = new Spectrogram[Signal](1 / newSpectra.head.duration, newSpectra, 4096, 2048)
 
     spectrogram.spectra.map(processSpectrum)
@@ -38,7 +38,6 @@ object HSP extends FundamentalsDetection {
       val iThAmplitudes = subAmplitudes.zipWithIndex.filter(_._2 % i == 0).unzip._1
       prodIndexedSeqs(res, iThAmplitudes)
     }
-
     res
   }
 

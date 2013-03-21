@@ -45,7 +45,7 @@ object TrackSelection {
 
       // there may the same hypothesis created different way ... tak those with maximum score
       val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.SRILMString(lmFormat)).
-        map( _._2.maxBy(_.normScore) ))
+        map( _._2.maxBy(_.scorePerNote) ))
 
       print(uniqueHypotheses.size + " of them unique")
 
@@ -56,14 +56,13 @@ object TrackSelection {
       val passOnHypotheses = normalizeHypothesesDist[Seq[Hypothesis]](
         if (count < edgeCandidatesCount) {
           val beginnings = thisTrack.notePossibilities.map(
-            n => new Hypothesis(Seq(n._1), bytelog(n._2))).sortBy(_.scorePerNote)
+            n => new Hypothesis(Seq(n._1), bytelog(n._2))).sortBy(-_.scorePerNote)
           beginnings.take(min(beginnings.size, 2 * nBestSize)) ++ newNBest
         }
         else newNBest)
 
       println(", " + passOnHypotheses.size + " hypotheses kept")
       val thisTrackProcessed = new SearchTrackWithHypotheses(thisTrack, passOnHypotheses)
-      val filteredProcessedTracks = processedTracks.filter( _.end >= predecessors.head.end)
 
       // if we are heading towards the end of the list of unprocessed track, start to
       // keep the finished ones as candidates to be the last ones
@@ -74,8 +73,8 @@ object TrackSelection {
         else lastTracks
 
       // if the track does not contribute with any new hypotheses, don't add it into the completed
-      if (passOnHypotheses.isEmpty) iterateTrackSelection(filteredProcessedTracks, todoTracks.drop(1), count, newLastTracks)
-      else iterateTrackSelection(filteredProcessedTracks :+ thisTrackProcessed,
+      if (passOnHypotheses.isEmpty) iterateTrackSelection(predecessors, todoTracks.drop(1), count, newLastTracks)
+      else iterateTrackSelection(predecessors :+ thisTrackProcessed,
                                   todoTracks.drop(1), count + 1, newLastTracks)
     }
   }

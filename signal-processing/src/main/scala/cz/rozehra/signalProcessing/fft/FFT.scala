@@ -40,6 +40,11 @@ object FFT {
     transformer.transform(f.toArray, TransformType.FORWARD)
   }
 
+  def ifft(f: IndexedSeq[Double]): Array[Complex] = {
+    require(isPowerOf2(f.size), "Input of FFT must have size of power of two.")
+    transformer.transform(f.toArray, TransformType.INVERSE)
+  }
+
   private def isPowerOf2(n: Int): Boolean =
    if (n == 2 || n == 1) true
    else if (n % 2 == 1) false

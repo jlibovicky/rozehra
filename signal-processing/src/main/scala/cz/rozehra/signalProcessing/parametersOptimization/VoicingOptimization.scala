@@ -53,10 +53,6 @@ object VoicingOptimization extends OptimizeFrequenciesBase {
       print(highestFunds(timeIndex)._2)
       print(",")
       println(highestFunds(timeIndex)._2 / averageStrength)
-
-      //val spectrumPower = spectrogram.spectra(timeIndex).amplitudes.foldLeft(0.0)(_ + _)
-      //print(",")
-      //println(highestFunds(timeIndex)._2 / spectrumPower)
     }
   }
 }

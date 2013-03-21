@@ -17,20 +17,20 @@ trait OptimizePartialTracking extends OptimizeFrequenciesBase {
       val trackOnTime = tracks.filter( t => t.start <= timeIndex && t.end >= timeIndex)
 
       if ((frequency == 0) || // silent place
-        (trackOnTime.exists( t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) < 0.25 )))
+        (trackOnTime.exists( t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) <= 0.5 )))
         containsCorrectTrack += 1.0
 
       if ((frequency == 0) || // silent place
-        (trackOnTime.exists( t => abs(toneFromFreq(t.averageFrequency) % 12.0 - toneFromFreq(frequency) % 12.0)  < 0.25 )))
+        (trackOnTime.exists( t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) % 12.0 <= 0.5 )))
         containsCorrectOctave += 1.0
 
       if ((frequency == 0) && trackOnTime.isEmpty) { totalFrequencyRecall += 1.0; totalToneRecall += 1.0 }
       else if (!trackOnTime.isEmpty) {
         totalFrequencyRecall += trackOnTime.filter(
-          t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) < 0.45 ).size /
+          t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) <= 0.5 ).size /
           trackOnTime.size.asInstanceOf[Double]
         totalToneRecall += trackOnTime.filter(
-          t => abs(toneFromFreq(t.averageFrequency) % 12.0 - toneFromFreq(frequency) % 12.0)  < 0.45).size /
+          t => abs(toneFromFreq(t.averageFrequency) - toneFromFreq(frequency)) % 12.0  <= 0.5).size /
           trackOnTime.size.asInstanceOf[Double]
       }
 

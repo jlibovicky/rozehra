@@ -6,7 +6,7 @@ import cz.rozehra.signalProcessing.partialtracking.Track
 import scala.io.Source
 import scala.math._
 import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
-import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.fundamentalsDetection.{CombinedFundamentalsDetection, FundamentalsDetection}
 import cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct.CBHSP
 
 object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
@@ -14,7 +14,7 @@ object OptimizePartialTrackingWithFundamentals extends OptimizePartialTracking {
   val maximumWithoutUpdateValues: Seq[Int] = Seq(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
   val minimumTrackDensities: Seq[Double] = Seq(0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
   val minimumTrackDurations: Seq[Int] = Seq(1, 2, 3, 4, 5, 6, 7)
-  val fundDetector: FundamentalsDetection = CBHSP
+  val fundDetector: FundamentalsDetection = CombinedFundamentalsDetection
 
   def main(args: Array[String]) {
     val testDirectory = new File(args(0))

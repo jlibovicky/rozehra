@@ -11,9 +11,9 @@ abstract trait GenericPartialTracking[T <: Double] {
   def minimumTrackDuration: Int
 
 
-  protected def appendCondition(avgFreq: Double, peak: Double): Boolean = {
+  protected def appendCondition(avgFreq: Double, peak: Double): Boolean =
     12 * abs(log(avgFreq /peak) / log(2.0)) < toneTolerance
-  }
+
 
   /**
    * Updates current tracks
@@ -122,6 +122,29 @@ abstract trait GenericPartialTracking[T <: Double] {
         }
       }
     }
-    partialTracking0(peaksList, Nil, Set.empty[Track], 0)
+
+    val rawTracks = partialTracking0(peaksList, Nil, Set.empty[Track], 0)
+    val tracksToReturn = collection.mutable.Set.empty[Track]
+
+    // take all tracks which are almost the same and merge them
+    for ((pitch, tracks) <- rawTracks.groupBy(_.pitch)) {
+      var restOfTracks = tracks
+      var growingTrack: Track = null
+      def overlap(t: Track): Boolean = (t.start < growingTrack.start && t.end > growingTrack.start) ||
+                              (t.start < growingTrack.end && t.end > growingTrack.end)
+
+      while(restOfTracks.nonEmpty) {
+        growingTrack = restOfTracks.head
+        restOfTracks = restOfTracks.tail
+
+        while( restOfTracks.exists(overlap)) {
+          val (toMerge, rest) = restOfTracks.partition(overlap)
+          growingTrack = toMerge.foldLeft(growingTrack)(_ merge _)
+          restOfTracks = rest
+        }
+        tracksToReturn.add(growingTrack)
+      }
+    }
+    tracksToReturn.toSet
   }
 }

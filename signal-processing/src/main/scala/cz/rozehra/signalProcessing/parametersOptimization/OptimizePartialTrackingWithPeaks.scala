@@ -84,11 +84,11 @@ object OptimizePartialTrackingWithPeaks extends OptimizePartialTracking {
       val timeIndex = min(floor(time * samplingRate).asInstanceOf[Int], funds.size - 1)
 
       if ((frequency == 0.0) ||
-        funds(timeIndex).exists( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) < 0.25))
+        funds(timeIndex).exists( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) <= 0.5))
         rightFrequencyDetected += 1.0
 
       if ((frequency == 0.0) ||
-        funds(timeIndex).exists( f => abs(toneFromFreq(f._1) % 12 - toneFromFreq(frequency) % 12) < 0.25))
+        funds(timeIndex).exists( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) % 12 <= 0.5))
         rightToneDetected += 1.0
     }
     (rightFrequencyDetected / solution.size, rightToneDetected / solution.size)

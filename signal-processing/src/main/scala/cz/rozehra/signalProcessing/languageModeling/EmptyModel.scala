@@ -9,7 +9,7 @@ object EmptyModel extends LanguageModel {
    * @return New list of hypotheses
    */
   def rescoreNBest(nBest: Iterable[Hypothesis]): Seq[Hypothesis] =
-    nBest.toSeq.sortBy(_.normScore)
+    nBest.toSeq.sortBy(-_.normScore)
 
 
   /**

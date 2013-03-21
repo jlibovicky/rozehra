@@ -67,13 +67,13 @@ object OptimizePeakDetection extends OptimizeFrequenciesBase {
 
       if (frequency != 0.0) voicedPlaces += 1
 
-      val correctlyPitchedPeaks = funds(timeIndex).filter( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) < 0.25)
+      val correctlyPitchedPeaks = funds(timeIndex).filter( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) <= 0.5)
       if ((frequency != 0.0) && correctlyPitchedPeaks.nonEmpty) {
         rightFrequencyDetected += 1.0
         rightFrequencyPrecision += (correctlyPitchedPeaks.size + 0.0) / funds(timeIndex).size
       }
 
-      val correctlyTonedPeaks = funds(timeIndex).filter( f => abs(toneFromFreq(f._1) % 12 - toneFromFreq(frequency) % 12) < 0.25 )
+      val correctlyTonedPeaks = funds(timeIndex).filter( f => abs(toneFromFreq(f._1) - toneFromFreq(frequency)) <= 0.5 )
       if ((frequency != 0.0) && correctlyTonedPeaks.nonEmpty) {
         rightToneDetected += 1.0
         rightTonePrecision += (correctlyTonedPeaks.size + 0.0) / funds(timeIndex).size

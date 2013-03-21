@@ -13,8 +13,15 @@ class Window[T <: Double](val samplingRate: Frequency, val withShift: Int,
         throw new Exception("Windows must have the same lenght and sampling rate to be added");       
       else 
         sumSequences[T](samples, that.samples)
-        
-    def toSpectrum: Spectrum[T] = {
+
+
+  def toSpectrumRectWindow: Spectrum[T] = {
+    val spectrum = FFT.powerSpectrum(samples, maxFrameSize)
+    val bandWidth: Frequency = samplingRate / 2 / spectrum.length
+    new Spectrum[T](withShift, bandWidth, spectrum)
+  }
+
+  def toSpectrum: Spectrum[T] = {
       val spectrum = FFT.powerSpectrum(FFT.hanningWindow(samples), maxFrameSize)
       val bandWidth: Frequency = samplingRate / 2 / spectrum.length 
       new Spectrum[T](withShift, bandWidth, spectrum)

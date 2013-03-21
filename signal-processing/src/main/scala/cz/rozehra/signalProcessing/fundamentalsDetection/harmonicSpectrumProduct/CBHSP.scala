@@ -31,14 +31,15 @@ object CBHSP extends FundamentalsDetection {
     Seq((maxFrequency, cbhsp(maxIndex)))
   }
 
+
   private def frequencyIndexedCepstrum(window: Window[Signal], take: Int) = {
     val transformed = new FreqDomainWindow(window)
-    val realCepststrum = fft.FFT.fft(transformed.values.map(c => log(pow(c.abs, 2)))).map(c => pow(c.abs, 2))
+    val realCepstrum = fft.FFT.fft(transformed.values.map(c => log(pow(c.abs, 2)))).map(c => pow(c.abs, 2))
 
-    val frequencyIndexedCepstrum = collection.mutable.IndexedSeq.fill(realCepststrum.size)(0.0)
-    for (i <- 0 until realCepststrum.size) {
+    val frequencyIndexedCepstrum = collection.mutable.IndexedSeq.fill(realCepstrum.size)(0.0)
+    for (i <- 0 until realCepstrum.size) {
       val indexToInsert = window.size / (i + 1)
-      frequencyIndexedCepstrum(indexToInsert) = max(indexToInsert, realCepststrum(i))
+      frequencyIndexedCepstrum(indexToInsert) = max(frequencyIndexedCepstrum(indexToInsert), realCepstrum(i))
     }
     frequencyIndexedCepstrum.take(take)
   }
