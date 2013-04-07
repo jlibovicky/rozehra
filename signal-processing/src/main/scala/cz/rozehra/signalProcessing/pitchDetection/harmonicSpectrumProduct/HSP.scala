@@ -1,6 +1,6 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct
+package cz.rozehra.signalProcessing.pitchDetection.harmonicSpectrumProduct
 
-import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.pitchDetection.FundamentalsDetection
 import cz.rozehra.signalProcessing._
 
 object HSP extends FundamentalsDetection {
@@ -9,18 +9,19 @@ object HSP extends FundamentalsDetection {
   override def detectFundamentals(signal: TimeDomainWaveForm[Signal]): List[Seq[(Frequency, Double)]] = {
 
     val newSpectra = signal.segmentToWindows(4096, 2048).windows.
-      map(w => w.changeMaxFrameSize(8192).toSpectrumRectWindow)
+      map(w => w.changeMaxFrameSize(8192).toSpectrum)
     val spectrogram = new Spectrogram[Signal](1 / newSpectra.head.duration, newSpectra, 4096, 2048)
 
+    //val spectrogram = signal.segmentToWindows(4096, 2048).toZeroPaddedSpectrogram
     spectrogram.spectra.map(processSpectrum)
   }
 
-  override def spectrogramSamplingRate(samplingRate: Double) = samplingRate / 8192
+  override def spectrogramSamplingRate(samplingRate: Double) = samplingRate / 2048
 
   private def processSpectrum(spectrum: Spectrum[Signal]): Seq[(Frequency, Double)] = {
     val hsp = computeHSP(spectrum, harmonicsCount)
 
-    val startBin = 52 * spectrum.maxFrequency / spectrum.bandsCount
+    val startBin = 0 //52 * spectrum.maxFrequency / spectrum.bandsCount
     val maxIndex = hsp.zipWithIndex.filter(_._2 > startBin).maxBy(_._1)._2
     val maxFrequency = maxIndex * spectrum.bandWidth
 

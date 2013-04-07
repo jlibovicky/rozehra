@@ -1,17 +1,17 @@
 package cz.rozehra.signalProcessing.parametersOptimization
 
 import cz.rozehra.signalProcessing.{PartialTrackingForFundamentals, WaveFileReader}
-import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
+import cz.rozehra.signalProcessing.pitchDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
 import cz.rozehra.signalProcessing.trackSelection.{Hypothesis, TrackSelection}
 import java.io.File
 import math._
-import cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct.{CBHSPwithWhitening, CBHSP, HSP}
-import cz.rozehra.signalProcessing.fundamentalsDetection.CombinedFundamentalsDetection
-import cz.rozehra.signalProcessing.partialtracking.{PartialTrackingForCBHSB, GenericPartialTracking}
+import cz.rozehra.signalProcessing.pitchDetection.harmonicSpectrumProduct.{CBHSPwithWhitening, CBHSP, HSP}
+import cz.rozehra.signalProcessing.pitchDetection.CombinedFundamentalsDetection
+import cz.rozehra.signalProcessing.partialtracking.{PartialTrackingForCBHSP, GenericPartialTracking}
 
 object MeasureTrackSearch extends OptimizeTrackSearchBase {
   override val fundamentalsAlgorithm = CBHSP
-  override val partialTrackingAlgorithm = PartialTrackingForCBHSB
+  override val partialTrackingAlgorithm = PartialTrackingForCBHSP
 
   def main(args: Array[String]) {
     val score = testAFile("C:\\MFF\\rozehra\\mirex05TrainFiles\\train01.wav")

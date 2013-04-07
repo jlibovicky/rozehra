@@ -1,6 +1,6 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct
+package cz.rozehra.signalProcessing.pitchDetection.harmonicSpectrumProduct
 
-import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.pitchDetection.FundamentalsDetection
 import cz.rozehra.signalProcessing._
 import scala.math._
 

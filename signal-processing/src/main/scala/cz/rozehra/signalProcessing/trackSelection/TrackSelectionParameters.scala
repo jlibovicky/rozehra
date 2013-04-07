@@ -3,21 +3,23 @@ package cz.rozehra.signalProcessing.trackSelection
 import cz.rozehra.signalProcessing.languageModeling._
 
 object TrackSelectionParameters {
-  val octavePenalty = 0.1
-  val durationTolerance = 0.01
-  val timeStep = 0.02
-  val durationWeight = 2.0 // it's an exponent
-  val densitiyBonification = 4.0
+  var srilmPort: Int = 19000
 
-  val lowestNote = 43
-  val highestNote = 75
+  var octavePenalty = 0.5
+  var durationTolerance = 0.01
+  var timeStep = 0.05
+  var durationWeight = 2.0 // it's an exponent
+  var densityBonification = 4.0
 
-  val lmFormat = LMFormat.Round0Rat
-  val languageModel: LanguageModel = EmptyModel
-  //val languageModel : LanguageModel = new SRILMWrapperRescore("c:\\cygwin\\srilm\\bin\\Release\\ngram.exe",
-  //    "C:\\MFF\\rozehra\\all-rat0.lm.gz", lmFormat)
+  var lowestNote = 43
+  var highestNote = 75
+
+  var lmFormat = LMFormat.None
+  var languageModel: LanguageModel = EmptyModel
+  //var languageModel : LanguageModel = new SRILMWrapperRescore("c:\\cygwin\\srilm\\bin\\Release\\ngram.exe",
+  //    "C:\\MFF\\rozehra\\all-rat0clust.lm.gz", lmFormat)
   val previousTracksToFollow = 3
-  val nBestSize = 20
+  var nBestSize = 20
   val edgeCandidatesCount = 6
 
 }

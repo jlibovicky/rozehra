@@ -26,6 +26,7 @@
         	<groupId>junit</groupId>
         	<artifactId>junit</artifactId>
         	<version>4.10</version>
+            <scope>test</scope>
         </dependency>
         
         <dependency>
@@ -36,17 +37,17 @@
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-actors</artifactId>
             <version>${scala.compiler.version}</version>
-        </dependency>
+        </dependency>-->
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-reflect</artifactId>
             <version>${scala.compiler.version}</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.scalatest</groupId>
@@ -84,6 +85,11 @@
             <id>scala-tools.org</id>
             <name>Scala-tools Maven2 Repository</name>
             <url>http://scala-tools.org/repo-releases</url>
+        </pluginRepository>
+
+        <pluginRepository>
+            <id>onejar-maven-plugin.googlecode.com</id>
+            <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
         </pluginRepository>
     </pluginRepositories>
 
@@ -180,7 +186,7 @@
                             <jvmSettings>
                                 <maxMemorySize>2g</maxMemorySize>
                             </jvmSettings>
-                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizePartialTrackingWithFundamentals</mainClass>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.OptimizePartialTracking$</mainClass>
                             <name>PartialTrackingOptimizationWithFundamentals</name>
                         </program>
 
@@ -208,8 +214,53 @@
                             <name>VoicingOptimization</name>
                         </program>
 
+                        <program>
+                            <jvmSettings>
+                                <maxMemorySize>2g</maxMemorySize>
+                            </jvmSettings>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.TrackSearchOptimization</mainClass>
+                            <name>TrackSearchOptimization</name>
+                        </program>
+
+                        <program>
+                            <jvmSettings>
+                                <maxMemorySize>500m</maxMemorySize>
+                            </jvmSettings>
+                            <mainClass>cz.rozehra.signalProcessing.parametersOptimization.AllFilesEvaluation</mainClass>
+                            <name>AllFilesEvaluation</name>
+                        </program>
+
                     </programs>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>cz.rozehra.signalProcessing.AME</mainClass>
+                        </manifest>
+
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.dstovall</groupId>
+                <artifactId>onejar-maven-plugin</artifactId>
+                <version>1.4.4</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <attachToBuild>true</attachToBuild>
+                        </configuration>
+                        <goals>
+                            <goal>one-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

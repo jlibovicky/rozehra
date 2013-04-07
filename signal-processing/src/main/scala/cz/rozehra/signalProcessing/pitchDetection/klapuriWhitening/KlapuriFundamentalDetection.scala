@@ -1,7 +1,7 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening
+package cz.rozehra.signalProcessing.pitchDetection.klapuriWhitening
 
 import cz.rozehra.signalProcessing._
-import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.pitchDetection.FundamentalsDetection
 
 object KlapuriFundamentalDetection extends FundamentalsDetection {
   override def detectFundamentals(signal: TimeDomainWaveForm[Signal]) = {

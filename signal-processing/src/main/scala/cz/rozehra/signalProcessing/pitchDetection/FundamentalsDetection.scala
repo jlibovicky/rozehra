@@ -1,4 +1,4 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection
+package cz.rozehra.signalProcessing.pitchDetection
 
 import cz.rozehra.signalProcessing._
 

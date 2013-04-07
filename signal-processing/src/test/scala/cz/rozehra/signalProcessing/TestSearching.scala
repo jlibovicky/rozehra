@@ -1,8 +1,8 @@
 package cz.rozehra.signalProcessing
 
-import fundamentalsDetection.{CombinedFundamentalsDetection, FundamentalsDetection}
-import fundamentalsDetection.harmonicSpectrumProduct.{CBHSPwithWhitening, CBHSP, HSP}
-import fundamentalsDetection.klapuriWhitening.{SpectrumWhitener, KlapuriFundamentalDetection, Whitening}
+import pitchDetection.{PeakDetection, CombinedFundamentalsDetection, FundamentalsDetection}
+import pitchDetection.harmonicSpectrumProduct.{CBHSPwithWhitening, CBHSP, HSP}
+import pitchDetection.klapuriWhitening.{SpectrumWhitener, KlapuriFundamentalDetection, Whitening}
 import org.scalatest.FunSuite
 import trackSelection.TrackSelection
 import visualization.Visualizer
@@ -21,7 +21,7 @@ class TestSearching extends FunSuite {
   }
 
   test("partial tracking with HPS") {
-    val fundDetection: FundamentalsDetection = CBHSP
+    val fundDetection: FundamentalsDetection = CombinedFundamentalsDetection
     val readFileStart = System.currentTimeMillis
     //val resource: InputStream = getClass().getClassLoader().getResourceAsStream("dMajorScaleRecorder.wav");
     //val wave = new WaveFileReader(resource);
@@ -30,7 +30,7 @@ class TestSearching extends FunSuite {
     println("Reading file: " + (readFileEnd - readFileStart) / 1000.0 + " s")
 
     val spectrogram = wave.segmentToWindows(4096, 2048).toSpectrogram
-    wave.segmentToWindows(4096, 2048).toSpectrogram.gnuplot("normalSpectrogram.png")
+    //wave.segmentToWindows(4096, 2048).toSpectrogram.gnuplot("normalSpectrogram.png")
     val spectrogramComputed = System.currentTimeMillis
     //spectrogram.gnuplot()
     println("Spectrogram computed: " + (spectrogramComputed - readFileEnd) / 1000.0 + " s")
@@ -55,12 +55,16 @@ class TestSearching extends FunSuite {
     visualizer2.drawFundamentals(JavaConversions.asJavaList((detectedFundamentals.map(_.map(_._1.asInstanceOf[java.lang.Double])))),
       spectrumRate)
 
+    readLine()
+
     val tracks = PartialTrackingForFundamentals.partialTracking(detectedFundamentals)
     val trackingEnd = System.currentTimeMillis
     println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
     //tracks.foreach( t => println(t) )
 
     visualizer2.drawPartialTracks(JavaConversions.asJavaList(tracks.toSeq), spectrumRate)
+
+    readLine()
 
     val searchingStart = System.currentTimeMillis()
     val result = TrackSelection.run(TrackSelection.convertTrackToSearchTracks(tracks, spectrumRate))

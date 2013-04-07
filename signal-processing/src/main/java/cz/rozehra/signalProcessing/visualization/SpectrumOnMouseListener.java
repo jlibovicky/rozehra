@@ -33,7 +33,7 @@ public class SpectrumOnMouseListener implements MouseMotionListener {
         int y = e.getPoint().y;
 
         double time = (double)x / (double)Visualizer.horizontalScale / sampleRate;
-        double frequency = (bandCount - (double)y) * bandWidth;
+        double frequency = (bandCount - (double)y - Visualizer.topFreqStart) * bandWidth;
 
         timeLabel.setText(df.format(time) + " s");
         if (frequency > 0) { frequencyLabel.setText(df.format(frequency) + " Hz"); }

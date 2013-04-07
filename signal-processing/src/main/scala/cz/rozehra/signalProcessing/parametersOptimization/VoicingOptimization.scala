@@ -2,9 +2,9 @@ package cz.rozehra.signalProcessing.parametersOptimization
 
 import java.io.{FileInputStream, File}
 import cz.rozehra.signalProcessing._
-import fundamentalsDetection.FundamentalsDetection
-import fundamentalsDetection.harmonicSpectrumProduct.CBHSP
-import fundamentalsDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
+import pitchDetection.FundamentalsDetection
+import pitchDetection.harmonicSpectrumProduct.CBHSP
+import pitchDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
 import math._
 
 object VoicingOptimization extends OptimizeFrequenciesBase {

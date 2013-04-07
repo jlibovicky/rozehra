@@ -1,4 +1,4 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening
+package cz.rozehra.signalProcessing.pitchDetection.klapuriWhitening
 
 import scala.math._
 import cz.rozehra.signalProcessing._

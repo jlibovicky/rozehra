@@ -1,8 +1,8 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.harmonicSpectrumProduct
+package cz.rozehra.signalProcessing.pitchDetection.harmonicSpectrumProduct
 
-import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.pitchDetection.FundamentalsDetection
 import cz.rozehra.signalProcessing._
-import fundamentalsDetection.klapuriWhitening.Whitening
+import pitchDetection.klapuriWhitening.Whitening
 import math._
 
 object CBHSPwithWhitening extends FundamentalsDetection {

@@ -1,4 +1,4 @@
-package cz.rozehra.signalProcessing.fundamentalsDetection.klapuriPerceptional
+package cz.rozehra.signalProcessing.pitchDetection.klapuriPerceptional
 
 import scala.math._
 import cz.rozehra.signalProcessing._

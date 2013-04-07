@@ -1,7 +1,7 @@
 package cz.rozehra.signalProcessing.languageModeling
 
 import java.io._
-import cz.rozehra.signalProcessing.trackSelection.{Note, Hypothesis}
+import cz.rozehra.signalProcessing.trackSelection.{TrackSelectionParameters, Note, Hypothesis}
 import cz.rozehra.signalProcessing.languageModeling.LMFormat.LMFormat
 import scala.math.{round}
 import util.control.Breaks
@@ -9,9 +9,8 @@ import util.control.Breaks
 class SRILMWrapperRescore(val pathToNgram: String, val pathToModel: String, val lmFormat: LMFormat) extends LanguageModel  {
   def this(pathToModel: String, lmFormat: LMFormat) = this("ngram", pathToModel, lmFormat)
 
-  val pathToLogFile = "srilm-last.log"
   // start the server process
-  //private val serverProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-lm",
+  //private val serverProcess = new ProcessBuilder(pathToNgram, "-order", 10", "-lm",
   //  pathToModel, "-server-port", "19000").start
   //serverProcess.getErrorStream.read // wait until the server is started
   //new dummyReader(serverProcess.getErrorStream).start()
@@ -25,7 +24,7 @@ class SRILMWrapperRescore(val pathToNgram: String, val pathToModel: String, val 
   def rescoreNBest(nBest: Iterable[Hypothesis]): Seq[Hypothesis] = {
     if (nBest.isEmpty) Seq.empty[Hypothesis]
     else {
-      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "9", "-use-server", "19000",
+      val ngramProcess = new ProcessBuilder(pathToNgram, "-order", "10", "-use-server", TrackSelectionParameters.srilmPort,
         "-nbest", "-", "-no-eos").start()
       val ngramWriter = new BufferedWriter(new OutputStreamWriter(ngramProcess.getOutputStream))
 
@@ -33,7 +32,7 @@ class SRILMWrapperRescore(val pathToNgram: String, val pathToModel: String, val 
       for (hypothesis <- nBest) {
         val SRILMString = hypothesis.SRILMString(lmFormat)
         stringToHypothesis += ((SRILMString, hypothesis))
-        ngramWriter.write("(" + round(hypothesis.actualScore) + ") " + SRILMString + "\n")
+        ngramWriter.write("(" + round(hypothesis.normScore) + ") " + SRILMString + "\n")
       }
       ngramWriter.flush
       ngramWriter.close

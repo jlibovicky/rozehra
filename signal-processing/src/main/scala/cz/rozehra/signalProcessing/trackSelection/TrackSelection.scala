@@ -41,13 +41,13 @@ object TrackSelection {
         newHypotheses += new Hypothesis(noteSeq, hypothesis.actualScore + bytelog(noteScore))
       }
 
-      print("   >>> continuation hypotheses: " + newHypotheses.size + ", ")
+      //print("   >>> continuation hypotheses: " + newHypotheses.size + ", ")
 
       // there may the same hypothesis created different way ... tak those with maximum score
       val uniqueHypotheses = normalizeHypothesesDist[Iterable[Hypothesis]](newHypotheses.groupBy(_.SRILMString(lmFormat)).
         map( _._2.maxBy(_.scorePerNote) ))
 
-      print(uniqueHypotheses.size + " of them unique")
+//      /print(uniqueHypotheses.size + " of them unique")
 
       // rescore the hypotheses using the language model and keep the best ones
       val newNBest = languageModel.rescoreNBest(uniqueHypotheses).take(min(nBestSize, uniqueHypotheses.size))
@@ -61,7 +61,7 @@ object TrackSelection {
         }
         else newNBest)
 
-      println(", " + passOnHypotheses.size + " hypotheses kept")
+      //println(", " + passOnHypotheses.size + " hypotheses kept")
       val thisTrackProcessed = new SearchTrackWithHypotheses(thisTrack, passOnHypotheses)
 
       // if we are heading towards the end of the list of unprocessed track, start to

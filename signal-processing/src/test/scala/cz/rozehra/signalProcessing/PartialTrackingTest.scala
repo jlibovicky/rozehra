@@ -1,6 +1,6 @@
 package cz.rozehra.signalProcessing
 
-import fundamentalsDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
+import pitchDetection.klapuriWhitening.{Whitening, KlapuriFundamentalDetection}
 import org.scalatest.FunSuite
 import java.io.InputStream
 import visualization.Visualizer

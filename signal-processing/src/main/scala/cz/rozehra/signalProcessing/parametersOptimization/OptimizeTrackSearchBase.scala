@@ -3,10 +3,10 @@ package cz.rozehra.signalProcessing.parametersOptimization
 import cz.rozehra.signalProcessing.trackSelection.{TrackSelection, Hypothesis}
 import math._
 import cz.rozehra.signalProcessing.{PartialTrackingForFundamentals, WaveFileReader}
-import cz.rozehra.signalProcessing.fundamentalsDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
+import cz.rozehra.signalProcessing.pitchDetection.klapuriWhitening.{KlapuriFundamentalDetection, Whitening}
 import java.io.File
-import cz.rozehra.signalProcessing.fundamentalsDetection.FundamentalsDetection
-import cz.rozehra.signalProcessing.partialtracking.{GenericPartialTracking, PartialTrackingForCBHSB, Track}
+import cz.rozehra.signalProcessing.pitchDetection.FundamentalsDetection
+import cz.rozehra.signalProcessing.partialtracking.{GenericPartialTracking, PartialTrackingForCBHSP, Track}
 import cz.rozehra.signalProcessing.voiceDetection.VoiceDetection
 import cz.rozehra.signalProcessing.Signal
 
@@ -19,7 +19,7 @@ trait OptimizeTrackSearchBase extends OptimizeFrequenciesBase {
     testJustTracks(tracksRes._1, tracksRes._2, fileName)
   }
 
-  def getPartialTracks(fileName: String): (Set[Track], Double) = {
+  def getPartialTracks(fileName: String): (Set[Track], Double, String) = {
     val readFileStart = System.currentTimeMillis
     val wave = new WaveFileReader(fileName)
     val readFileEnd = System.currentTimeMillis
@@ -42,7 +42,7 @@ trait OptimizeTrackSearchBase extends OptimizeFrequenciesBase {
     val tracks = partialTrackingAlgorithm.partialTracking(detectedFundamentals)
     val trackingEnd = System.currentTimeMillis
     System.err.println("Partial tracking: " + (trackingEnd - fundamentalsEnd) / 1000.0 + " s")
-    (tracks, wave.samplingRate)
+    (tracks, wave.samplingRate, fileName)
   }
 
   def testJustTracks(tracks: Set[Track], samplingRate: Double, fileName: String): (Double, Double, Double, Double) = {
@@ -50,11 +50,13 @@ trait OptimizeTrackSearchBase extends OptimizeFrequenciesBase {
     val result = TrackSelection.run(TrackSelection.convertTrackToSearchTracks(tracks,
       fundamentalsAlgorithm.spectrogramSamplingRate(samplingRate)))
     System.err.println("Track searching: " + (System.currentTimeMillis() - searchingStart) / 1000.0 + " s")
-    System.err.println(result.head)
-    System.err.println(result.head.scorePerNote)
+    //System.err.println(result.head)
+    //System.err.println(result.head.scorePerNote)
 
-    val solution = loadCorrectSolution(new File(fileName))
-    evaluateHypothesis(result.head, solution)
+    val correctSolution = loadCorrectSolution(new File(fileName))
+    val hypothesis = if (result.nonEmpty) result.head
+                     else new Hypothesis(Seq.empty, 0.0)
+    evaluateHypothesis(hypothesis, correctSolution)
   }
 
   def evaluateHypothesis(hypothesis: Hypothesis, solution: Seq[Double]): (Double, Double, Double, Double) = {
